@@ -1,0 +1,17 @@
+# Production. Every secret comes from env vars; nothing is mocked by default
+# except where the env var is left unset (fails loudly for payment/shipping).
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+
+app:
+  payment:
+    provider: ${PAYMENT_PROVIDER:razorpay}
+  shipping:
+    provider: ${SHIPPING_PROVIDER:shiprocket}
+  notifications:
+    email: ${NOTIFY_EMAIL:smtp}

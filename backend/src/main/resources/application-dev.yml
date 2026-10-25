@@ -1,0 +1,13 @@
+# Hosted dev / staging. Postgres (Supabase) via env vars.
+# Integrations default to mock; switch with PAYMENT_PROVIDER=razorpay etc.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+
+app:
+  auth:
+    expose-otp: ${EXPOSE_OTP:false}

@@ -1,0 +1,101 @@
+# Shared settings for every environment.
+# Environment-specific values live in application-<profile>.yml and are
+# overridden on hosted environments through environment variables.
+spring:
+  application:
+    name: vindhyanstudio
+  profiles:
+    default: local
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+      fail-on-unknown-properties: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate   # Flyway owns the schema; this only checks entities match it
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 32MB
+
+server:
+  port: ${PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5180}
+  cors-origins: ${APP_CORS_ORIGINS:http://localhost:5180}
+
+  seller:
+    name: ${SELLER_NAME:Vindhyan Studio}
+    address: ${SELLER_ADDRESS:Address line, City, State - 000000}
+    state: ${SELLER_STATE:Madhya Pradesh}
+    gstin: ${SELLER_GSTIN:}
+    email: ${SELLER_EMAIL:orders@vindhyanstudio.local}
+    phone: ${SELLER_PHONE:}
+
+  admin:
+    # Comma-separated emails / phone numbers that get the ADMIN role on login.
+    identities: ${ADMIN_IDENTITIES:admin@vindhyanstudio.local}
+
+  auth:
+    jwt-secret: ${JWT_SECRET:change-me-local-only-secret-change-me-local-only}
+    token-ttl-hours: ${JWT_TTL_HOURS:168}
+    otp-length: 6
+    otp-ttl-seconds: 300
+    otp-resend-seconds: 30
+    otp-max-attempts: 5
+    # Returns the OTP in the API response so you can log in without email/SMS.
+    # NEVER enable outside local.
+    expose-otp: false
+
+  catalogue:
+    source: ${CATALOGUE_SOURCE:local}          # local (Excel + photos folder) | google-drive (future)
+    local-path: ${CATALOGUE_LOCAL_PATH:../catalogue}
+    sync-on-startup: true
+    sync-cron: ${CATALOGUE_SYNC_CRON:0 */10 * * * *}
+
+  storage:
+    provider: ${STORAGE_PROVIDER:local}        # local | supabase
+    local-path: ${STORAGE_LOCAL_PATH:./data/storage}
+    supabase:
+      url: ${SUPABASE_URL:}
+      service-key: ${SUPABASE_SERVICE_KEY:}
+      public-bucket: ${SUPABASE_PUBLIC_BUCKET:catalogue}
+      private-bucket: ${SUPABASE_PRIVATE_BUCKET:private}
+
+  pricing:
+    shipping-flat-fee: ${SHIPPING_FLAT_FEE:79}
+    free-shipping-above: ${FREE_SHIPPING_ABOVE:999}
+    cod-enabled: ${COD_ENABLED:true}
+    cod-max-order-value: ${COD_MAX_ORDER_VALUE:3000}
+
+  payment:
+    provider: ${PAYMENT_PROVIDER:mock}         # mock | razorpay
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID:}
+      key-secret: ${RAZORPAY_KEY_SECRET:}
+      webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+
+  shipping:
+    provider: ${SHIPPING_PROVIDER:mock}        # mock | shiprocket
+    shiprocket:
+      email: ${SHIPROCKET_EMAIL:}
+      password: ${SHIPROCKET_PASSWORD:}
+      pickup-location: ${SHIPROCKET_PICKUP_LOCATION:Primary}
+      pickup-pincode: ${SHIPROCKET_PICKUP_PINCODE:}
+      webhook-token: ${SHIPROCKET_WEBHOOK_TOKEN:}
+
+  notifications:
+    email: ${NOTIFY_EMAIL:console}             # console | smtp
+    sms: ${NOTIFY_SMS:console}                 # console (msg91 later)
+    from-email: ${NOTIFY_FROM_EMAIL:Vindhyan Studio <orders@vindhyanstudio.local>}
