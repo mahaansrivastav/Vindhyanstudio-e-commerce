@@ -74,7 +74,7 @@ public class PricingService {
 
     /** Strict check used when placing an order: required inputs present and options valid. */
     public void validateCustomisation(Product p, Customisation c, long customerId) {
-        CustomisationSpec spec = p.getCategory().spec();
+        CustomisationSpec spec = p.spec();
         Customisation in = c == null ? new Customisation(null, null, null, null, List.of()) : c;
         String label = p.getName() + ": ";
         if (spec.textRequired() && (in.text() == null || in.text().isBlank())) {

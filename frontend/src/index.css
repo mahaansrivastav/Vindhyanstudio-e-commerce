@@ -1,33 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --color-ink: #1c1917;
-  --color-muted: #78716c;
-  --color-line: #e7e5e4;
-  --color-paper: #fafaf9;
+  --color-ink: #14161b;
+  --color-muted: #5d6470;
+  --color-line: #e3e6eb;
+  --color-paper: #ffffff;
   --color-card: #ffffff;
-  --color-brand: #9a3412;
-  --color-brand-dark: #7c2d12;
-  --color-brand-soft: #fff7ed;
+  --color-surface: #f4f6f9;
+  --color-brand: #1356d6;
+  --color-brand-dark: #0d42a8;
+  --color-brand-soft: #edf3ff;
+  --color-accent: #ff7a1a;
   --color-ok: #15803d;
   --color-warn: #b45309;
-  --color-bad: #b91c1c;
+  --color-bad: #c42b2b;
 }
 
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
   body { @apply bg-paper text-ink font-sans antialiased; }
-  h1, h2, h3 { @apply font-display tracking-tight; }
+  h1, h2, h3 { @apply font-display font-extrabold tracking-tight; }
 }
 
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed;
 }
 @utility btn-primary {
-  @apply btn bg-brand text-white hover:bg-brand-dark;
+  @apply btn bg-brand text-white shadow-sm hover:bg-brand-dark;
 }
 @utility btn-outline {
   @apply btn border border-line bg-card hover:border-ink;
@@ -42,11 +44,15 @@
   @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-muted;
 }
 @utility card {
-  @apply rounded-2xl border border-line bg-card;
+  @apply rounded-2xl border border-line bg-card shadow-[0_1px_2px_rgba(16,24,40,0.04)];
 }
 @utility chip {
   @apply rounded-full border border-line px-3 py-1.5 text-sm transition hover:border-ink;
 }
 @utility chip-on {
   @apply border-brand bg-brand-soft text-brand font-semibold;
+}
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
 }

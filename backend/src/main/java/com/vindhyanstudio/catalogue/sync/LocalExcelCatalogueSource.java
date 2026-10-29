@@ -25,7 +25,7 @@ import com.vindhyanstudio.config.AppProperties;
 public class LocalExcelCatalogueSource implements CatalogueSource {
 
     private static final Map<String, String> IMAGE_TYPES = Map.of(
-            "jpg", "image/jpeg", "jpeg", "image/jpeg", "png", "image/png", "webp", "image/webp", "svg", "image/svg+xml");
+            "jpg", "image/jpeg", "jpeg", "image/jpeg", "png", "image/png", "webp", "image/webp", "gif", "image/gif", "svg", "image/svg+xml");
 
     private final Path root;
 
@@ -44,11 +44,12 @@ public class LocalExcelCatalogueSource implements CatalogueSource {
         try (InputStream in = Files.newInputStream(file); Workbook wb = WorkbookFactory.create(in)) {
             Sheet products = Optional.ofNullable(wb.getSheet("products")).orElse(wb.getSheetAt(0));
             Sheet categories = wb.getSheet("categories");
-            return new Snapshot(rows(products), categories == null ? List.of() : rows(categories));
+            FormulaEvaluator ev = wb.getCreationHelper().createFormulaEvaluator();
+            return new Snapshot(rows(products, ev), categories == null ? List.of() : rows(categories, ev));
         }
     }
 
-    private static List<Row> rows(Sheet sheet) {
+    private static List<Row> rows(Sheet sheet, FormulaEvaluator ev) {
         DataFormatter fmt = new DataFormatter();
         Iterator<org.apache.poi.ss.usermodel.Row> it = sheet.rowIterator();
         if (!it.hasNext()) return List.of();
@@ -63,13 +64,29 @@ public class LocalExcelCatalogueSource implements CatalogueSource {
             Map<String, String> cells = new HashMap<>();
             boolean any = false;
             for (int i = 0; i < headers.size(); i++) {
-                String v = fmt.formatCellValue(r.getCell(i)).trim();
+                String v;
+                try {
+                    v = fmt.formatCellValue(r.getCell(i), ev).trim();
+                } catch (RuntimeException e) {
+                    v = fmt.formatCellValue(r.getCell(i)).trim(); // formula the evaluator can't handle
+                }
                 if (!v.isEmpty()) any = true;
                 cells.put(headers.get(i), v);
             }
             if (any) out.add(new Row(r.getRowNum() + 1, cells));
         }
         return out;
+    }
+
+    @Override
+    public Photo file(String relativePath) throws Exception {
+        Path f = root.resolve(relativePath.trim()).normalize();
+        if (!f.startsWith(root) || !Files.isRegularFile(f)) return null;
+        String name = f.getFileName().toString();
+        String ext = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : "";
+        if (!IMAGE_TYPES.containsKey(ext)) return null;
+        byte[] bytes = Files.readAllBytes(f);
+        return new Photo(name, sha256(bytes), bytes, IMAGE_TYPES.get(ext));
     }
 
     @Override

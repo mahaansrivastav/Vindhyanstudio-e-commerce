@@ -29,7 +29,7 @@ export function setToken(t: string | null) {
 
 type Options = { method?: string; body?: unknown; form?: FormData; signal?: AbortSignal }
 
-async function request(path: string, opts: Options = {}): Promise<Response> {
+async function request(path: string, opts: Options = {}, retried = false): Promise<Response> {
   const headers: Record<string, string> = {}
   if (token) headers.Authorization = `Bearer ${token}`
   let body: BodyInit | undefined
@@ -47,8 +47,10 @@ async function request(path: string, opts: Options = {}): Promise<Response> {
   }
   if (!res.ok) {
     if (res.status === 401 && token) {
+      // Expired or invalid login: forget it and retry once as a guest (public pages keep working).
       setToken(null)
       window.dispatchEvent(new Event('vs:logout'))
+      if (!retried) return request(path, opts, true)
     }
     let message = res.status === 403 ? 'You do not have access to this.' : 'Something went wrong. Please try again.'
     try {

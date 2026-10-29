@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
-import { useAuth } from '../state/AppState'
+import { useAuth, useConfig } from '../state/AppState'
 
 type Step = 'identity' | 'code'
 
@@ -100,7 +100,10 @@ export function OtpForm({ mode, onDone, linkMode = false }: { mode: 'phone' | 'e
 }
 
 export function Login() {
-  const [mode, setMode] = useState<'phone' | 'email'>('phone')
+  const config = useConfig()
+  const phone = config?.phoneLogin ?? false
+  const [picked, setMode] = useState<'phone' | 'email' | null>(null)
+  const mode = picked ?? (phone ? 'phone' : 'email')
   const { profile, signIn } = useAuth()
   const [params] = useSearchParams()
   const nav = useNavigate()
@@ -113,8 +116,8 @@ export function Login() {
     <div className="mx-auto max-w-sm">
       <h1 className="text-3xl font-bold">Log in or sign up</h1>
       <p className="mt-1 text-sm text-muted">No password needed. We’ll send you a one-time code.</p>
-      <div className="mt-6 grid grid-cols-2 rounded-xl bg-stone-100 p-1 text-sm font-semibold" role="tablist">
-        {(['phone', 'email'] as const).map((m) => (
+      <div className={`mt-6 grid ${phone ? 'grid-cols-2' : 'grid-cols-1'} rounded-xl bg-stone-100 p-1 text-sm font-semibold`} role="tablist">
+        {(phone ? (['phone', 'email'] as const) : (['email'] as const)).map((m) => (
           <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
                   className={`rounded-lg py-2 ${mode === m ? 'bg-card shadow-sm' : 'text-muted'}`}>
             {m === 'phone' ? 'Mobile' : 'Email'}

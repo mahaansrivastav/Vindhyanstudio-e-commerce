@@ -66,13 +66,13 @@ public class CatalogueController {
         return new ProductDetail(p.getSku(), p.getName(), p.getSlug(), c.getName(), c.getSlug(), p.getDescription(),
                 p.getMrp(), p.getSellingPrice(), p.getOfferPct(), p.getStock(),
                 p.getImages().stream().map(i -> storage.publicUrl(i.getStorageKey())).toList(),
-                c.spec(), c.colourList(), c.sizeList(), c.getLeadTimeDays(), c.isReturnable());
+                p.spec(), c.colourList(), c.sizeList(), c.getLeadTimeDays(), c.isReturnable());
     }
 
     ProductCard card(Product p) {
         return new ProductCard(p.getSku(), p.getName(), p.getSlug(), p.getCategory().getName(), p.getCategory().getSlug(),
                 p.getMrp(), p.getSellingPrice(), p.getOfferPct(), p.getStock(), firstImage(p),
-                p.getCategory().spec().madeToOrder() || p.getCategory().spec().colour() || p.getCategory().spec().size());
+                p.spec().madeToOrder() || p.spec().colour() || p.spec().size());
     }
 
     private String firstImage(Product p) {

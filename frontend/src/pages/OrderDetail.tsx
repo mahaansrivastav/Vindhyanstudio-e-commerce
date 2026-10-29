@@ -61,7 +61,7 @@ export function OrderDetail() {
         <StatusBadge status={o.status} />
       </div>
 
-      <OrderProgress status={o.status} />
+      <OrderProgress status={o.status} events={o.events} />
 
       {o.shipment?.awb && (
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4 text-sm">

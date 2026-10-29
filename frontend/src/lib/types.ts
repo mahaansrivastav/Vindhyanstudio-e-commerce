@@ -5,12 +5,14 @@ export interface PublicConfig {
   sellerAddress: string
   sellerEmail: string
   sellerPhone: string
+  whatsapp: string
   shippingFlatFee: number
   freeShippingAbove: number
   codEnabled: boolean
   codMaxOrderValue: number
   paymentProvider: 'mock' | 'razorpay' | string
   devOtp: boolean
+  phoneLogin: boolean
 }
 
 export interface CategoryDto { name: string; slug: string; productCount: number; coverImage: string | null }
@@ -22,7 +24,7 @@ export interface ProductCard {
 
 export interface CustomisationSpec {
   minPhotos: number; maxPhotos: number; text: boolean; textRequired: boolean
-  colour: boolean; size: boolean; notes: boolean
+  colour: boolean; size: boolean; notes: boolean; sizeLabel: string
 }
 
 export interface ProductDetail {
@@ -84,6 +86,7 @@ export interface SyncRun {
 export interface AdminProduct {
   sku: string; name: string; slug: string; categoryId: number; category: string; description: string | null
   mrp: number; sellingPrice: number; offerPct: number; stock: number; active: boolean; source: 'EXCEL' | 'ADMIN'
+  customisation: string | null; categoryCustomisation: string | null
   images: { id: number; url: string }[]
 }
 

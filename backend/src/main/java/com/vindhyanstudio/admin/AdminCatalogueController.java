@@ -45,7 +45,9 @@ public class AdminCatalogueController {
 
     public record ProductDto(String sku, String name, String slug, Long categoryId, String category, String description,
                              BigDecimal mrp, BigDecimal sellingPrice, int offerPct, int stock, boolean active, String source,
-                             List<ImageDto> images) {}
+                             String customisation, String categoryCustomisation, List<ImageDto> images) {}
+
+    public record CustomisationForm(@Size(max = 500) String customisation) {}
 
     public record ProductForm(
             @Size(max = 50) @Pattern(regexp = "^$|[A-Za-z0-9_-]+", message = "may only contain letters, digits, - and _") String sku,
@@ -111,6 +113,21 @@ public class AdminCatalogueController {
         Product p = find(sku);
         requireAdminOwned(p);
         apply(p, f, category(f.categoryId()));
+        return dto(p);
+    }
+
+    /** Personalisation can be set for any product, including Excel ones (it isn't a sheet column). */
+    @PutMapping("/products/{sku}/customisation")
+    @Transactional
+    public ProductDto setCustomisation(@PathVariable String sku, @Valid @RequestBody CustomisationForm f) {
+        Product p = find(sku);
+        String spec = blankToNull(f.customisation());
+        try {
+            CustomisationSpec.parse(spec);
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badRequest("Personalisation: " + e.getMessage());
+        }
+        p.setCustomisationSpec(spec);
         return dto(p);
     }
 
@@ -265,7 +282,7 @@ public class AdminCatalogueController {
     private ProductDto dto(Product p) {
         return new ProductDto(p.getSku(), p.getName(), p.getSlug(), p.getCategory().getId(), p.getCategory().getName(),
                 p.getDescription(), p.getMrp(), p.getSellingPrice(), p.getOfferPct(), p.getStock(), p.isActive(), p.getSource(),
-                p.getImages().stream().map(i -> new ImageDto(i.getId(), storage.publicUrl(i.getStorageKey()))).toList());
+                p.getCustomisationSpec(), p.getCategory().getCustomisationSpec(), p.getImages().stream().map(i -> new ImageDto(i.getId(), storage.publicUrl(i.getStorageKey()))).toList());
     }
 
     private static CategoryDto categoryDto(Category c, long count) {

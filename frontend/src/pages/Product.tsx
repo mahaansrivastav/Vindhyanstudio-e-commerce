@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { IconShield, IconTruck } from '../components/Icons'
+import { colourHex, KeyringPreview } from '../components/KeyringPreview'
 import { PincodeCheck } from '../components/PincodeCheck'
 import { Heart } from '../components/ProductCard'
 import { ErrorBox, Price, ProductImage, Spinner, StockBadge } from '../components/ui'
 import { api } from '../lib/api'
 import type { ProductDetail } from '../lib/types'
 import { useAsync } from '../lib/useAsync'
-import { useAuth, useCart, useWishlist } from '../state/AppState'
+import { useAuth, useCart, useConfig, useWishlist } from '../state/AppState'
 
 interface Upload { key: string; preview: string }
 
@@ -26,12 +28,13 @@ export function Product() {
   const cart = useCart()
   const wish = useWishlist()
   const { profile } = useAuth()
+  const config = useConfig()
   const nav = useNavigate()
   const loc = useLocation()
 
   useEffect(() => {
     if (!p) return
-    setImg(0); setColour(p.colours[0] ?? ''); setSize(p.sizes[0] ?? ''); setText(''); setNotes(''); setPhotos([]); setAdded(false)
+    setImg(0); setColour(p.colours[0] ?? ''); setSize(p.sizes[0] ?? ''); setText(''); setNotes(''); setPhotos([]); setAdded(false); setQty(1)
   }, [p])
 
   if (loading) return <Spinner />
@@ -39,12 +42,17 @@ export function Product() {
 
   const spec = p.customisation
   const madeToOrder = spec.maxPhotos > 0 || spec.text || spec.notes
+  const customisable = madeToOrder || spec.colour || spec.size
+  // Name keyrings get the live designer preview as the first gallery slide.
+  const hasPreview = spec.text && p.categorySlug.includes('key')
+  const slides = hasPreview ? p.images.length + 1 : p.images.length
+  const saved = wish.has(p.sku)
+  let step = 0
 
   const upload = async (files: FileList | null) => {
     if (!files) return
     setFormErr(null)
-    const room = spec.maxPhotos - photos.length
-    const list = Array.from(files).slice(0, room)
+    const list = Array.from(files).slice(0, spec.maxPhotos - photos.length)
     for (const f of list) {
       if (!['image/jpeg', 'image/png'].includes(f.type)) return setFormErr('Please upload JPG or PNG photos')
       if (f.size > 10 * 1024 * 1024) return setFormErr('Each photo must be under 10 MB')
@@ -83,125 +91,188 @@ export function Product() {
     else setAdded(true)
   }
 
-  const saved = wish.has(p.sku)
-
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      <div className="space-y-3">
-        <ProductImage src={p.images[img] ?? null} alt={p.name} className="aspect-square w-full rounded-3xl" />
-        {p.images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto">
-            {p.images.map((src, i) => (
-              <button key={src} onClick={() => setImg(i)} className={`shrink-0 overflow-hidden rounded-xl ring-2 ${i === img ? 'ring-brand' : 'ring-transparent'}`} aria-label={`Photo ${i + 1}`}>
-                <img src={src} alt="" className="h-16 w-16 object-cover" />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="space-y-6">
+      <nav className="text-sm text-muted" aria-label="Breadcrumb">
+        <Link to="/" className="hover:text-brand">Home</Link> <span className="mx-1">/</span>
+        <Link to={`/shop?category=${p.categorySlug}`} className="hover:text-brand">{p.category}</Link> <span className="mx-1">/</span>
+        <span className="text-ink">{p.name}</span>
+      </nav>
 
-      <div className="space-y-5">
-        <div>
-          <Link to={`/shop?category=${p.categorySlug}`} className="text-xs font-semibold uppercase tracking-wide text-brand">{p.category}</Link>
-          <h1 className="mt-1 text-3xl font-bold">{p.name}</h1>
-          <div className="mt-3 flex items-center gap-3"><Price price={p.sellingPrice} mrp={p.mrp} offer={p.offerPct} size="lg" /><StockBadge stock={p.stock} /></div>
-          <p className="mt-1 text-xs text-muted">Inclusive of all taxes</p>
+      <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+        {/* Gallery */}
+        <div className="space-y-3 lg:sticky lg:top-36 lg:self-start">
+          <div className="overflow-hidden rounded-3xl border border-line bg-surface">
+            {hasPreview && img === 0
+              ? <KeyringPreview text={text} colour={colour} style={size} className="aspect-square w-full" />
+              : <ProductImage src={p.images[hasPreview ? img - 1 : img] ?? null} alt={p.name} className="aspect-square w-full" />}
+          </div>
+          {slides > 1 && (
+            <div className="flex gap-2 overflow-x-auto">
+              {hasPreview && (
+                <button onClick={() => setImg(0)} className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 bg-brand-soft text-[11px] font-bold text-brand ${img === 0 ? 'border-brand' : 'border-transparent'}`}>
+                  Your design
+                </button>
+              )}
+              {p.images.map((src, i) => {
+                const idx = hasPreview ? i + 1 : i
+                return (
+                  <button key={src} onClick={() => setImg(idx)} className={`shrink-0 overflow-hidden rounded-xl border-2 ${idx === img ? 'border-brand' : 'border-transparent'}`} aria-label={`Photo ${i + 1}`}>
+                    <img src={src} alt="" className="h-16 w-16 object-cover" />
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        {madeToOrder && (
-          <p className="rounded-xl bg-brand-soft px-3 py-2 text-sm text-brand-dark">
-            Made to order: printed after you order, ready to ship in about <b>{p.leadTimeDays} days</b>.
-            {!p.returnable && ' Personalised items can’t be returned unless damaged or defective.'}
-          </p>
-        )}
-
-        {spec.colour && p.colours.length > 0 && (
-          <fieldset>
-            <legend className="label">Colour</legend>
-            <div className="flex flex-wrap gap-2">
-              {p.colours.map((c) => <button type="button" key={c} onClick={() => setColour(c)} className={`chip ${colour === c ? 'chip-on' : ''}`}>{c}</button>)}
-            </div>
-          </fieldset>
-        )}
-        {spec.size && p.sizes.length > 0 && (
-          <fieldset>
-            <legend className="label">Size / variant</legend>
-            <div className="flex flex-wrap gap-2">
-              {p.sizes.map((s) => <button type="button" key={s} onClick={() => setSize(s)} className={`chip ${size === s ? 'chip-on' : ''}`}>{s}</button>)}
-            </div>
-          </fieldset>
-        )}
-        {spec.text && (
-          <label className="block">
-            <span className="label">Name / text to print {spec.textRequired ? '' : '(optional)'}</span>
-            <input className="input" maxLength={60} value={text} onChange={(e) => { setText(e.target.value); setFormErr(null) }} placeholder="e.g. AARAV" />
-            <span className="mt-1 block text-right text-xs text-muted">{text.length}/60</span>
-          </label>
-        )}
-        {spec.maxPhotos > 0 && (
+        {/* Details + designer */}
+        <div className="space-y-6">
           <div>
-            <span className="label">Your photo{spec.maxPhotos > 1 ? 's' : ''} ({spec.minPhotos === spec.maxPhotos ? spec.minPhotos : `${spec.minPhotos}–${spec.maxPhotos}`}) · JPG/PNG up to 10 MB</span>
-            {!profile ? (
-              <Link to={`/login?next=${encodeURIComponent(loc.pathname)}`} className="btn-outline w-full">Log in to upload photos</Link>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {photos.map((ph) => (
-                  <div key={ph.key} className="relative">
-                    <img src={ph.preview} alt="Your upload" className="h-20 w-20 rounded-xl object-cover" />
-                    <button type="button" onClick={() => setPhotos(photos.filter((x) => x.key !== ph.key))}
-                            className="absolute -right-1.5 -top-1.5 h-6 w-6 rounded-full bg-ink text-xs text-white" aria-label="Remove photo">×</button>
+            <h1 className="text-3xl leading-tight">{p.name}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-3"><Price price={p.sellingPrice} mrp={p.mrp} offer={p.offerPct} size="lg" /><StockBadge stock={p.stock} /></div>
+            <p className="mt-1 text-xs text-muted">Inclusive of all taxes · {madeToOrder ? `Ready to ship in ~${p.leadTimeDays} days` : 'Ships in 1–2 days'}</p>
+          </div>
+
+          {customisable && (
+            <div className="card divide-y divide-line">
+              <div className="px-5 py-4">
+                <p className="font-bold">Personalise it</p>
+                <p className="text-sm text-muted">{hasPreview ? 'Your choices update the preview instantly.' : 'Tell us how you want it made.'}</p>
+              </div>
+
+              {spec.size && p.sizes.length > 0 && (
+                <Step n={++step} title={`Choose ${spec.sizeLabel.toLowerCase()}`}>
+                  <div className="flex flex-wrap gap-2">
+                    {p.sizes.map((s) => (
+                      <button type="button" key={s} onClick={() => { setSize(s); if (hasPreview) setImg(0) }} className={`chip ${size === s ? 'chip-on' : ''}`}
+                              style={hasPreview ? { fontFamily: styleFont(s) } : undefined}>{s}</button>
+                    ))}
                   </div>
-                ))}
-                {photos.length < spec.maxPhotos && (
-                  <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-line text-xs text-muted hover:border-brand">
-                    {uploading ? '…' : '+ Add'}
-                    <input type="file" accept="image/jpeg,image/png" multiple={spec.maxPhotos > 1} className="sr-only" disabled={uploading}
-                           onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
-                  </label>
-                )}
-              </div>
-            )}
-            <p className="mt-2 text-xs text-muted">Use a sharp, well-lit photo. We check every photo before printing and will contact you if it won’t print well. Photos are used only for your order and deleted after delivery.</p>
-          </div>
-        )}
-        {spec.notes && (
-          <label className="block">
-            <span className="label">Notes for the maker (optional)</span>
-            <textarea className="input" rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pose, outfit colours, anything we should know" />
-          </label>
-        )}
+                </Step>
+              )}
 
-        {p.stock > 0 ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="label mb-0">Qty</span>
-              <div className="flex items-center rounded-xl border border-line">
-                <button className="px-3 py-2" onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease">−</button>
-                <span className="w-8 text-center text-sm font-semibold">{qty}</span>
-                <button className="px-3 py-2" onClick={() => setQty(Math.min(Math.min(20, p.stock), qty + 1))} aria-label="Increase">+</button>
-              </div>
+              {spec.colour && p.colours.length > 0 && (
+                <Step n={++step} title="Choose colour" aside={colour}>
+                  <div className="flex flex-wrap gap-2.5">
+                    {p.colours.map((c) => (
+                      <button type="button" key={c} onClick={() => { setColour(c); if (hasPreview) setImg(0) }} title={c} aria-label={c} aria-pressed={colour === c}
+                              className={`h-9 w-9 rounded-full border border-black/10 ring-offset-2 transition ${colour === c ? 'ring-2 ring-brand' : 'hover:ring-2 hover:ring-line'}`}
+                              style={{ background: knownColour(c) ? colourHex(c) : undefined }}>
+                        {!knownColour(c) && <span className="text-[10px] font-semibold">{c.slice(0, 3)}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </Step>
+              )}
+
+              {spec.text && (
+                <Step n={++step} title={`Enter name / text${spec.textRequired ? '' : ' (optional)'}`}>
+                  <input className="input text-base" maxLength={hasPreview ? 14 : 60} value={text} placeholder="e.g. AARAV"
+                         onChange={(e) => { setText(e.target.value); setFormErr(null); if (hasPreview) setImg(0) }} />
+                  <span className="mt-1 block text-right text-xs text-muted">{text.length}/{hasPreview ? 14 : 60}</span>
+                </Step>
+              )}
+
+              {spec.maxPhotos > 0 && (
+                <Step n={++step} title={`Upload photo${spec.maxPhotos > 1 ? 's' : ''} (${spec.minPhotos === spec.maxPhotos ? spec.minPhotos : `${spec.minPhotos}–${spec.maxPhotos}`})`}>
+                  {!profile ? (
+                    <Link to={`/login?next=${encodeURIComponent(loc.pathname)}`} className="btn-outline w-full">Sign in to upload photos</Link>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {photos.map((ph) => (
+                        <div key={ph.key} className="relative">
+                          <img src={ph.preview} alt="Your upload" className="h-20 w-20 rounded-xl object-cover" />
+                          <button type="button" onClick={() => setPhotos(photos.filter((x) => x.key !== ph.key))}
+                                  className="absolute -right-1.5 -top-1.5 h-6 w-6 rounded-full bg-ink text-xs text-white" aria-label="Remove photo">×</button>
+                        </div>
+                      ))}
+                      {photos.length < spec.maxPhotos && (
+                        <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-line text-xs font-semibold text-muted hover:border-brand hover:text-brand">
+                          {uploading ? '…' : '+ Add'}
+                          <input type="file" accept="image/jpeg,image/png" multiple={spec.maxPhotos > 1} className="sr-only" disabled={uploading}
+                                 onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
+                        </label>
+                      )}
+                    </div>
+                  )}
+                  <p className="mt-2 text-xs text-muted">JPG/PNG, up to 10 MB. Use a sharp, well-lit photo. We check every photo before printing.</p>
+                </Step>
+              )}
+
+              {spec.notes && (
+                <Step n={++step} title="Notes for the maker (optional)">
+                  <textarea className="input" rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pose, outfit colours, anything we should know" />
+                </Step>
+              )}
             </div>
-            {formErr && <p className="text-sm text-bad" role="alert">{formErr}</p>}
-            <div className="flex gap-2">
-              <button className="btn-primary flex-1" onClick={() => addToCart(true)} disabled={uploading}>Buy now</button>
-              <button className="btn-outline flex-1" onClick={() => addToCart(false)} disabled={uploading}>Add to cart</button>
-              <button className="btn-outline px-3" onClick={() => wish.toggle({ sku: p.sku, slug: p.slug, name: p.name, image: p.images[0] ?? null, price: p.sellingPrice })}
-                      aria-label={saved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={saved}><Heart filled={saved} /></button>
+          )}
+
+          {p.stock > 0 ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold">Quantity</span>
+                <div className="flex items-center rounded-xl border border-line">
+                  <button className="px-3 py-2 text-lg" onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease">−</button>
+                  <span className="w-8 text-center text-sm font-bold">{qty}</span>
+                  <button className="px-3 py-2 text-lg" onClick={() => setQty(Math.min(Math.min(20, p.stock), qty + 1))} aria-label="Increase">+</button>
+                </div>
+                <span className="ml-auto text-lg font-extrabold">₹{(p.sellingPrice * qty).toLocaleString('en-IN')}</span>
+              </div>
+              {formErr && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-bad" role="alert">{formErr}</p>}
+              <div className="flex gap-2">
+                <button className="btn-primary flex-1 py-3.5 text-base" onClick={() => addToCart(true)} disabled={uploading}>Buy now</button>
+                <button className="btn-outline flex-1 py-3.5 text-base" onClick={() => addToCart(false)} disabled={uploading}>Add to cart</button>
+                <button className="btn-outline px-3.5" onClick={() => wish.toggle({ sku: p.sku, slug: p.slug, name: p.name, image: p.images[0] ?? null, price: p.sellingPrice })}
+                        aria-label={saved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={saved}><Heart filled={saved} /></button>
+              </div>
+              {added && <p className="text-sm text-ok">✓ Added to cart. <Link to="/cart" className="font-bold underline">View cart</Link></p>}
             </div>
-            {added && <p className="text-sm text-ok">Added to cart. <Link to="/cart" className="font-semibold underline">View cart</Link></p>}
+          ) : (
+            <button className="btn-outline w-full py-3.5" disabled>Out of stock</button>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-2xl bg-surface p-4 text-sm"><IconTruck className="mt-0.5 h-5 w-5 shrink-0 text-brand" /><span><b>Free shipping</b> above ₹999. Tracking on every order.</span></div>
+            <div className="flex items-start gap-3 rounded-2xl bg-surface p-4 text-sm"><IconShield className="mt-0.5 h-5 w-5 shrink-0 text-brand" /><span><b>Secure payment</b> by UPI, card, net banking or COD.</span></div>
           </div>
-        ) : (
-          <button className="btn-outline w-full" disabled>Out of stock</button>
-        )}
+          {madeToOrder && !p.returnable && <p className="text-xs text-muted">Personalised items are made just for you and can’t be returned unless damaged or defective. <Link to="/policies/refund" className="underline">Returns policy</Link></p>}
 
-        <div className="card p-4"><PincodeCheck leadDays={madeToOrder ? p.leadTimeDays : 1} /></div>
+          {config?.whatsapp && (
+            <a href={`https://wa.me/${config.whatsapp}?text=${encodeURIComponent(`Hi! I have a question about ${p.name} (${p.sku}).`)}`} target="_blank" rel="noopener"
+               className="btn-outline w-full border-[#25D366] text-[#128C7E]">Questions or a custom size? Ask us on WhatsApp</a>
+          )}
 
-        <div>
-          <h2 className="font-sans text-sm font-semibold">About this product</h2>
-          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-stone-700">{p.description}</p>
-          <p className="mt-3 text-xs text-muted">SKU {p.sku}</p>
+          <div className="card p-5"><PincodeCheck leadDays={madeToOrder ? p.leadTimeDays : 1} /></div>
+
+          <div>
+            <h2 className="text-lg">Product details</h2>
+            <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink/80">{p.description}</p>
+            <p className="mt-3 text-xs text-muted">SKU {p.sku} · Country of origin: India</p>
+          </div>
         </div>
       </div>
     </div>
   )
+}
+
+function Step({ n, title, aside, children }: { n: number; title: string; aside?: string; children: React.ReactNode }) {
+  return (
+    <div className="px-5 py-4">
+      <p className="mb-3 flex items-center gap-2 text-sm font-bold">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs text-white">{n}</span>
+        {title}
+        {aside && <span className="font-normal text-muted">· {aside}</span>}
+      </p>
+      {children}
+    </div>
+  )
+}
+
+function knownColour(name: string) {
+  return colourHex(name) !== '#1f2328' || name.toLowerCase() === 'black'
+}
+
+function styleFont(style: string) {
+  return ({ script: 'Pacifico, cursive', bold: '"Archivo Black", sans-serif', rounded: 'Fredoka, sans-serif' } as Record<string, string>)[style.toLowerCase()]
 }

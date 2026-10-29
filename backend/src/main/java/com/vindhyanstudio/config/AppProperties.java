@@ -26,7 +26,7 @@ public record AppProperties(
         return split(corsOrigins);
     }
 
-    public record Seller(String name, String address, String state, String gstin, String email, String phone) {}
+    public record Seller(String name, String address, String state, String gstin, String email, String phone, String whatsapp) {}
 
     public record Admin(String identities) {
         public List<String> identityList() {
@@ -37,7 +37,7 @@ public record AppProperties(
     public record Auth(String jwtSecret, int tokenTtlHours, int otpLength, int otpTtlSeconds,
                        int otpResendSeconds, int otpMaxAttempts, boolean exposeOtp) {}
 
-    public record Catalogue(String source, String localPath, boolean syncOnStartup, String syncCron) {}
+    public record Catalogue(String source, String localPath, boolean syncOnStartup, String syncCron, boolean publishOnly) {}
 
     public record Storage(String provider, String localPath, Supabase supabase) {
         public record Supabase(String url, String serviceKey, String publicBucket, String privateBucket) {}

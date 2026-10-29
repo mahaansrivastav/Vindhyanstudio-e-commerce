@@ -16,6 +16,24 @@ public interface CatalogueSource {
             String v = cells.get(header.toLowerCase());
             return v == null ? "" : v.trim();
         }
+
+        /** First column whose header equals, or else starts with, one of the keys (case-insensitive). */
+        public String any(String... keys) {
+            String h = header(keys);
+            return h == null ? "" : get(h);
+        }
+
+        public boolean has(String... keys) {
+            return header(keys) != null;
+        }
+
+        private String header(String... keys) {
+            for (String k : keys) if (cells.containsKey(k.toLowerCase())) return k.toLowerCase();
+            for (String k : keys) {
+                for (String h : cells.keySet()) if (h.startsWith(k.toLowerCase())) return h;
+            }
+            return null;
+        }
     }
 
     record Photo(String fileName, String checksum, byte[] content, String contentType) {}
@@ -23,6 +41,9 @@ public interface CatalogueSource {
     record Snapshot(List<Row> products, List<Row> categories) {}
 
     Snapshot read() throws Exception;
+
+    /** One image by path relative to the catalogue folder (the sheet's "Image File" column), or null if missing. */
+    Photo file(String relativePath) throws Exception;
 
     /** All images in photos/&lt;sku&gt;/, sorted by file name. Empty if the folder is missing. */
     List<Photo> photos(String sku) throws Exception;

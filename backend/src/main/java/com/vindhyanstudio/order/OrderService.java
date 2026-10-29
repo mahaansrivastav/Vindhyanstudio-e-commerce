@@ -70,6 +70,9 @@ public class OrderService {
                     .map(l -> l.name() + ": " + l.problem()).findFirst().orElse("Please review your cart");
             throw ApiException.badRequest(problem);
         }
+        if (req.paymentMode() == PaymentMode.ONLINE && "disabled".equals(props.payment().provider())) {
+            throw ApiException.badRequest("Online payment is coming soon. Please choose cash on delivery.");
+        }
         if (req.paymentMode() == PaymentMode.COD && !quote.codAvailable()) {
             throw ApiException.badRequest("Cash on delivery is not available for this order");
         }
@@ -142,7 +145,8 @@ public class OrderService {
         if (!o.getStatus().canMoveTo(next)) throw ApiException.badRequest("Can't move from " + o.getStatus() + " to " + next);
         if (next == OrderStatus.READY) {
             Shipment s = shipping.book(orderId);
-            note = (note == null || note.isBlank() ? "" : note + " · ") + "Courier booked: " + s.getCourier() + " AWB " + s.getAwb();
+            note = (note == null || note.isBlank() ? "" : note + " · ") + "Courier booked: " + s.getCourier()
+                    + (s.getAwb() != null ? " AWB " + s.getAwb() : "");
         }
         o.moveTo(next, note, actor);
         events.publishEvent(new OrderStatusChangedEvent(o.getId(), next));

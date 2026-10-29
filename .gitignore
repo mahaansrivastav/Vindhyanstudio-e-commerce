@@ -17,3 +17,14 @@ frontend/.env.local
 # secrets
 .env
 *.env.local
+
+# Product photos (large; uploaded to storage by the catalogue sync)
+catalogue/asset_image/
+
+# Production secrets
+backend/.env.production.local
+*.env.production.local
+
+# Owner's working sheet has cost prices; keep it out of the public repo
+catalogue/catalogue.xlsx
+docs/catalogue-source/

@@ -73,7 +73,7 @@ public class ShippingService {
         Order order = orders.findById(orderId).orElseThrow();
         Shipment s = create(orderId);
         if (s.getShipmentId() == null) throw ApiException.badRequest("Shipment could not be created: " + s.getLastError());
-        if (s.getAwb() != null) return s;
+        if (s.getAwb() != null || "BOOKED".equals(s.getStatus())) return s;
         try {
             s.booked(provider.book(s.getShipmentId()));
         } catch (Exception e) {

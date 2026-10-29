@@ -7,7 +7,7 @@ import { describeCustomisation, rupees } from '../lib/format'
 import type { Address } from '../lib/types'
 import { Steps } from './Pay'
 import { useAsync } from '../lib/useAsync'
-import { useCart } from '../state/AppState'
+import { useCart, useConfig } from '../state/AppState'
 import { Row, useQuote } from './Cart'
 
 export function Checkout() {
@@ -20,6 +20,8 @@ export function Checkout() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const nav = useNavigate()
+  const config = useConfig()
+  const onlineOff = config?.paymentProvider === 'disabled'
 
   useEffect(() => {
     const list = addresses.data
@@ -30,6 +32,7 @@ export function Checkout() {
   const showForm = adding || addresses.data?.length === 0
 
   useEffect(() => { if (quote && !quote.codAvailable && mode === 'COD') setMode('ONLINE') }, [quote, mode])
+  useEffect(() => { if (onlineOff) setMode('COD') }, [onlineOff])
 
   if (cart.lines.length === 0) return <Empty title="Your cart is empty"><Link to="/shop" className="btn-primary mt-2">Shop now</Link></Empty>
   if (addresses.loading && !addresses.data) return <Spinner />
@@ -88,9 +91,9 @@ export function Checkout() {
         <section className="card p-5">
           <h2 className="font-sans text-base font-semibold">2. Payment</h2>
           <div className="mt-3 space-y-2 text-sm">
-            <label className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${mode === 'ONLINE' ? 'border-brand bg-brand-soft' : 'border-line'}`}>
-              <input type="radio" name="mode" checked={mode === 'ONLINE'} onChange={() => setMode('ONLINE')} />
-              <span><b>Pay online</b><br /><span className="text-muted">UPI, cards, netbanking, wallets</span></span>
+            <label className={`flex gap-3 rounded-xl border p-3 ${onlineOff ? 'opacity-50' : 'cursor-pointer'} ${mode === 'ONLINE' ? 'border-brand bg-brand-soft' : 'border-line'}`}>
+              <input type="radio" name="mode" checked={mode === 'ONLINE'} disabled={onlineOff} onChange={() => setMode('ONLINE')} />
+              <span><b>Pay online</b><br /><span className="text-muted">{onlineOff ? 'Coming soon' : 'UPI, cards, netbanking, wallets'}</span></span>
             </label>
             <label className={`flex gap-3 rounded-xl border p-3 ${quote?.codAvailable ? 'cursor-pointer' : 'opacity-50'} ${mode === 'COD' ? 'border-brand bg-brand-soft' : 'border-line'}`}>
               <input type="radio" name="mode" checked={mode === 'COD'} disabled={!quote?.codAvailable} onChange={() => setMode('COD')} />

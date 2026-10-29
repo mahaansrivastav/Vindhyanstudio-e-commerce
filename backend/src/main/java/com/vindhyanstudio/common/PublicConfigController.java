@@ -26,12 +26,15 @@ public class PublicConfigController {
         m.put("sellerAddress", props.seller().address());
         m.put("sellerEmail", props.seller().email());
         m.put("sellerPhone", props.seller().phone());
+        m.put("whatsapp", props.seller().whatsapp());
         m.put("shippingFlatFee", props.pricing().shippingFlatFee());
         m.put("freeShippingAbove", props.pricing().freeShippingAbove());
         m.put("codEnabled", props.pricing().codEnabled());
         m.put("codMaxOrderValue", props.pricing().codMaxOrderValue());
         m.put("paymentProvider", props.payment().provider());
         m.put("devOtp", props.auth().exposeOtp());
+        // Mobile OTP login is only offered once a real SMS sender is configured (or in local dev).
+        m.put("phoneLogin", props.auth().exposeOtp() || !"console".equals(props.notifications().sms()));
         return m;
     }
 }

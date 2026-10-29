@@ -22,12 +22,6 @@ export function Shop() {
         <h1 className="text-3xl font-bold">{q ? `Results for “${q}”` : current?.name ?? 'All products'}</h1>
         {products.data && <p className="mt-1 text-sm text-muted">{products.data.length} item{products.data.length === 1 ? '' : 's'}</p>}
       </div>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        <Link to="/shop" className={`chip shrink-0 ${!category ? 'chip-on' : ''}`}>All</Link>
-        {cats.data?.map((c) => (
-          <Link key={c.slug} to={`/shop?category=${c.slug}`} className={`chip shrink-0 ${category === c.slug ? 'chip-on' : ''}`}>{c.name}</Link>
-        ))}
-      </div>
       {products.loading && <Spinner />}
       {products.error && <ErrorBox message={products.error} onRetry={products.reload} />}
       {products.data?.length === 0 && <Empty title="Nothing found">Try a different search or <Link className="underline" to="/shop">browse everything</Link>.</Empty>}

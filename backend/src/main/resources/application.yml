@@ -41,7 +41,8 @@ app:
     state: ${SELLER_STATE:Madhya Pradesh}
     gstin: ${SELLER_GSTIN:}
     email: ${SELLER_EMAIL:orders@vindhyanstudio.local}
-    phone: ${SELLER_PHONE:}
+    phone: ${SELLER_PHONE:+91 94559 38254}
+    whatsapp: ${SELLER_WHATSAPP:919455938254}   # digits only, used for wa.me chat links
 
   admin:
     # Comma-separated emails / phone numbers that get the ADMIN role on login.
@@ -61,8 +62,9 @@ app:
   catalogue:
     source: ${CATALOGUE_SOURCE:local}          # local (Excel + photos folder) | google-drive (future)
     local-path: ${CATALOGUE_LOCAL_PATH:../catalogue}
-    sync-on-startup: true
+    sync-on-startup: ${CATALOGUE_SYNC_ON_STARTUP:true}
     sync-cron: ${CATALOGUE_SYNC_CRON:0 */10 * * * *}
+    publish-only: false
 
   storage:
     provider: ${STORAGE_PROVIDER:local}        # local | supabase
@@ -74,20 +76,20 @@ app:
       private-bucket: ${SUPABASE_PRIVATE_BUCKET:private}
 
   pricing:
-    shipping-flat-fee: ${SHIPPING_FLAT_FEE:79}
+    shipping-flat-fee: ${SHIPPING_FLAT_FEE:60}
     free-shipping-above: ${FREE_SHIPPING_ABOVE:999}
     cod-enabled: ${COD_ENABLED:true}
     cod-max-order-value: ${COD_MAX_ORDER_VALUE:3000}
 
   payment:
-    provider: ${PAYMENT_PROVIDER:mock}         # mock | razorpay
+    provider: ${PAYMENT_PROVIDER:mock}         # mock (local only) | disabled (COD only) | razorpay
     razorpay:
       key-id: ${RAZORPAY_KEY_ID:}
       key-secret: ${RAZORPAY_KEY_SECRET:}
       webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
 
   shipping:
-    provider: ${SHIPPING_PROVIDER:mock}        # mock | shiprocket
+    provider: ${SHIPPING_PROVIDER:mock}        # mock (local only) | manual (owner books courier) | shiprocket
     shiprocket:
       email: ${SHIPROCKET_EMAIL:}
       password: ${SHIPROCKET_PASSWORD:}

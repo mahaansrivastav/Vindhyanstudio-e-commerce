@@ -168,6 +168,7 @@ export function ProductEditor() {
       </div>
 
       <aside className="space-y-4">
+        {product && <Personalisation product={product} onChange={setProduct} />}
         <Photos product={product} locked={locked} queued={queued} setQueued={setQueued} onChange={setProduct} onError={setErr} />
         <div className="card space-y-3 p-4 lg:sticky lg:top-24">
           {err && <p className="text-sm text-bad" role="alert">{err}</p>}
@@ -176,6 +177,36 @@ export function ProductEditor() {
         </div>
       </aside>
     </form>
+  )
+}
+
+function Personalisation({ product, onChange }: { product: AdminProduct; onChange: (p: AdminProduct) => void }) {
+  const [value, setValue] = useState(product.customisation ?? '')
+  const [msg, setMsg] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const presets: [string, string][] = [['Name keychain', 'style, colour, text'], ['Name / text', 'text'], ['1 photo', 'photo:1, notes'], ['2–3 photos', 'photo:2-3, notes'], ['None', '']]
+  const save = async (v: string) => {
+    setErr(null); setMsg(null)
+    try {
+      onChange(await api<AdminProduct>(`/api/admin/products/${product.sku}/customisation`, { method: 'PUT', body: { customisation: v } }))
+      setValue(v)
+      setMsg('Saved')
+    } catch (e) { setErr((e as Error).message) }
+  }
+  return (
+    <section className="card space-y-3 p-4">
+      <h3 className="label">Personalisation</h3>
+      <p className="text-xs text-muted">What the customer fills in for this product. Empty = category default{product.categoryCustomisation ? ` (${product.categoryCustomisation})` : ' (none)'}.</p>
+      <div className="flex flex-wrap gap-1.5">
+        {presets.map(([label, v]) => <button key={label} type="button" onClick={() => save(v)} className={`chip py-1 text-xs ${value === v ? 'chip-on' : ''}`}>{label}</button>)}
+      </div>
+      <div className="flex gap-2">
+        <input className="input py-2 text-xs" value={value} onChange={(e) => { setValue(e.target.value); setMsg(null) }} placeholder="e.g. style, colour, text" />
+        <button type="button" className="btn-outline py-2 text-xs" onClick={() => save(value)}>Save</button>
+      </div>
+      {err && <p className="text-xs text-bad">{err}</p>}
+      {msg && <p className="text-xs text-ok">{msg}</p>}
+    </section>
   )
 }
 

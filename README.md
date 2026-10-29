@@ -21,7 +21,7 @@ cd backend && ./mvnw spring-boot:run
 cd frontend && npm install && npm run dev
 ```
 
-Open http://localhost:5180.
+Open http://localhost:5180. If port 8080 is busy, run the backend with `PORT=8081 APP_PUBLIC_BASE_URL=http://localhost:8081` and the frontend with `BACKEND_URL=http://localhost:8081 npm run dev`.
 
 - **Local mode** uses a file-based H2 database (`backend/data/`). Payments, shipping, email and SMS are **mocked**: payments show a "Simulate payment" dialog, and messages are printed in the backend console.
 - **Login:** on the login screen, the OTP is shown on the page ("Local dev code").
@@ -114,15 +114,22 @@ Online orders go **Cart → Address (checkout) → Payment** (`/pay/<orderId>`).
 
 ## Catalogue (owner's Excel)
 
-`catalogue/catalogue.xlsx` has two sheets:
+`catalogue/catalogue.xlsx` is the owner's own working sheet (originals in `docs/catalogue-source/`). The sync reads it as-is:
 
-- **products**: the BRD columns, unchanged: `SKU_id, Product_Name, Product_category, MRP, Selling_Price, %offer, stock, descriptions`.
-- **categories**: one row per category: `category, hsn_code, gst_rate, weight_g, length_cm, width_cm, height_cm, lead_time_days, customisation, colours, sizes, returnable`.
-  - `customisation` uses these options: `photo:1`, `photo:2-3`, `text` (required), `text?` (optional), `colour`, `size` / `variant`, `notes`.
+| Sheet column | Used as |
+|---|---|
+| `S no.` | SKU `VS-001`, `VS-002`… (keep numbers stable) |
+| `Flag` | `0` = hidden from the website, blank/anything else = live |
+| `Category` / `Sub-Category` | category / product name ("customisable" + Keychain → "Customisable Keychain") |
+| `MRP (₹)…` / `Selling Price (₹)` | prices (formulas are evaluated) |
+| `Description` + `Details` | product description (marketplace "Boost me" text is stripped) |
+| `Image File` | main photo, e.g. `asset_image/3.png`, relative to `catalogue/` |
 
-Photos go in `catalogue/photos/<SKU_id>/`. All images in a SKU's folder appear on its product page, in file-name order.
-
-The catalogue syncs on startup, every 10 minutes, and from **Admin → Catalogue sync**. Bad rows are skipped and listed in the error report; the sample row `XX-ERR` shows this. Stock is reduced on payment and written back into the Excel sheet.
+- Photos live in `catalogue/asset_image/`. Extra photos for a product can go in `catalogue/photos/<SKU>/`. The sync makes web-sized copies (max 1200 px), and the originals are never changed.
+- There's no stock column, so products are made to order and never show "out of stock".
+- Category settings (GST, weight/size, days to make, colours, styles) and **per-product personalisation** (e.g. `style, colour, text` for name keychains) are set in **Admin → Products / Categories** and are kept across syncs.
+- The sync runs on startup, every 10 minutes, and from **Admin → Excel sync**. Rows with problems (e.g. a missing image) are skipped and listed there.
+- Our older template layout (`SKU_id, Product_Name, Product_category, MRP, Selling_Price, stock…` plus a `categories` sheet) still works too.
 
 ## Deploying (free tiers)
 

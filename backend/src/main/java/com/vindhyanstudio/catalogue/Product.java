@@ -28,6 +28,8 @@ public class Product {
     private boolean active = true;
     /** EXCEL = owned by the catalogue sheet; ADMIN = created/edited in the admin screen. */
     private String source = "EXCEL";
+    /** Personalisation for this product (e.g. "style, colour, text"); null = use the category's. */
+    private String customisationSpec;
     private OffsetDateTime syncedAt;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -58,6 +60,13 @@ public class Product {
     public void setOfferPct(int offerPct) { this.offerPct = offerPct; }
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
+    /** Effective personalisation: the product's own setting, else its category's. */
+    public CustomisationSpec spec() {
+        return customisationSpec != null ? CustomisationSpec.parse(customisationSpec) : category.spec();
+    }
+
+    public String getCustomisationSpec() { return customisationSpec; }
+    public void setCustomisationSpec(String customisationSpec) { this.customisationSpec = customisationSpec; }
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
     public boolean isActive() { return active; }

@@ -2,13 +2,14 @@ package com.vindhyanstudio.catalogue;
 
 /**
  * Which inputs a category asks the customer for, written in the Excel "categories" sheet, e.g.
- * {@code photo:1, size} or {@code photo:2-3, notes} or {@code text?, colour}.
+ * {@code photo:1, size} or {@code photo:2-3, notes} or {@code style, colour, text}.
+ * {@code style}/{@code variant} use the "sizes" column but are labelled Style/Variant for the customer.
  * {@code photo:N} / {@code photo:MIN-MAX} = number of photos; a trailing {@code ?} makes text optional.
  */
 public record CustomisationSpec(int minPhotos, int maxPhotos, boolean text, boolean textRequired,
-                                boolean colour, boolean size, boolean notes) {
+                                boolean colour, boolean size, boolean notes, String sizeLabel) {
 
-    public static final CustomisationSpec NONE = new CustomisationSpec(0, 0, false, false, false, false, false);
+    public static final CustomisationSpec NONE = new CustomisationSpec(0, 0, false, false, false, false, false, "Size");
 
     public boolean madeToOrder() {
         return maxPhotos > 0 || text || notes;
@@ -18,6 +19,7 @@ public record CustomisationSpec(int minPhotos, int maxPhotos, boolean text, bool
         if (raw == null || raw.isBlank()) return NONE;
         int min = 0, max = 0;
         boolean text = false, textRequired = false, colour = false, size = false, notes = false;
+        String sizeLabel = "Size";
         for (String part : raw.toLowerCase().split("[,;]")) {
             String p = part.trim();
             if (p.startsWith("photo")) {
@@ -40,14 +42,17 @@ public record CustomisationSpec(int minPhotos, int maxPhotos, boolean text, bool
                 text = true;
             } else if (p.equals("colour") || p.equals("color")) {
                 colour = true;
-            } else if (p.equals("size") || p.equals("variant")) {
+            } else if (p.equals("size")) {
                 size = true;
+            } else if (p.equals("variant") || p.equals("style")) {
+                size = true;
+                sizeLabel = p.equals("style") ? "Style" : "Variant";
             } else if (p.equals("notes")) {
                 notes = true;
             } else if (!p.isEmpty()) {
                 throw new IllegalArgumentException("Unknown customisation option '" + p + "'");
             }
         }
-        return new CustomisationSpec(min, max, text, textRequired, colour, size, notes);
+        return new CustomisationSpec(min, max, text, textRequired, colour, size, notes, sizeLabel);
     }
 }
