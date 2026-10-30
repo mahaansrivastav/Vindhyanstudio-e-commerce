@@ -91,112 +91,278 @@ public class InvoiceService {
         return prefix + "/" + fy + "/" + String.format("%05d", c.lastNo);
     }
 
+    private record Line(String description, String hsn, int qty, BigDecimal rate, BigDecimal gross, BigDecimal gstRate) {}
+
     private byte[] render(String no, LocalDate date, Order order, Customer customer) {
         boolean gst = seller.gstin() != null && !seller.gstin().isBlank();
         AddressSnapshot a = order.address();
         boolean intra = seller.state() != null && seller.state().equalsIgnoreCase(a.state());
+        boolean hasLegal = seller.legalName() != null && !seller.legalName().isBlank();
+        String legal = hasLegal ? seller.legalName() : seller.name();
+
+        // Lines: products, then shipping billed as part of the goods (same HSN and rate as the main item).
+        java.util.List<Line> lines = new java.util.ArrayList<>();
+        OrderItem main = null;
+        for (OrderItem i : order.getItems()) {
+            if (main == null || i.lineTotal().compareTo(main.lineTotal()) > 0) main = i;
+            lines.add(new Line(i.getName() + "\n" + i.getSku(), hsn(i.getHsnCode()), i.getQty(), i.getUnitPrice(), i.lineTotal(), i.getGstRate()));
+        }
+        if (order.getShippingFee().signum() > 0) {
+            lines.add(new Line("Shipping & handling charges", main == null ? hsn(null) : hsn(main.getHsnCode()), 1,
+                    order.getShippingFee(), order.getShippingFee(), main == null ? new BigDecimal("18") : main.getGstRate()));
+        }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document doc = new Document(PageSize.A4, 36, 36, 36, 36);
+        Document doc = new Document(PageSize.A4, 32, 32, 30, 36);
         PdfWriter writer = PdfWriter.getInstance(doc, out);
         writer.setPageEvent(new Watermark());
         doc.open();
 
-        doc.add(new Paragraph(gst ? "TAX INVOICE" : "INVOICE", H1));
-        doc.add(new Paragraph(" ", S));
-
-        PdfPTable head = new PdfPTable(2);
-        head.setWidthPercentage(100);
-        boolean hasLegal = seller.legalName() != null && !seller.legalName().isBlank();
-        PdfPCell sellerCell = new PdfPCell();
-        sellerCell.setPadding(6);
-        sellerCell.setBorderColor(Color.LIGHT_GRAY);
-        sellerCell.addElement(new Phrase(hasLegal ? seller.legalName() : seller.name(), B));
-        sellerCell.addElement(new Phrase((hasLegal ? "(Brand: " + seller.name() + ")\n" : "") + seller.address()
-                + (gst ? "\nGSTIN: " + seller.gstin() : "")
-                + (seller.email() == null ? "" : "\n" + seller.email())
-                + (seller.phone() == null || seller.phone().isBlank() ? "" : "\n" + seller.phone()), N));
-        head.addCell(sellerCell);
-        head.addCell(box("Invoice No: " + no + "\nInvoice Date: " + date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-                + "\nOrder No: " + order.getOrderNo() + "\nPayment: " + (order.getPaymentMode().name().equals("COD") ? "Cash on Delivery" : "Prepaid (online)")
-                + "\nPlace of supply: " + a.state()));
-        head.addCell(box("Bill / Ship to:\n" + a.name() + "\n" + a.oneLine() + "\nPhone: " + a.phone()
-                + (customer.getEmail() == null ? "" : "\n" + customer.getEmail())));
-        head.addCell(box(""));
-        doc.add(head);
-        doc.add(new Paragraph(" ", S));
-
-        String[] cols = gst
-                ? new String[] {"#", "Item", "HSN", "Qty", "Rate (incl.)", "Taxable", intra ? "CGST+SGST" : "IGST", "Amount"}
-                : new String[] {"#", "Item", "Qty", "Rate", "Amount"};
-        PdfPTable t = new PdfPTable(gst ? new float[] {3, 28, 9, 5, 12, 12, 14, 12} : new float[] {4, 50, 8, 16, 16});
-        t.setWidthPercentage(100);
-        for (String c : cols) t.addCell(headerCell(c));
-
-        BigDecimal taxableTotal = BigDecimal.ZERO, taxTotal = BigDecimal.ZERO, maxRate = BigDecimal.ZERO;
-        int n = 1;
-        for (OrderItem i : order.getItems()) {
-            BigDecimal gross = i.lineTotal();
-            maxRate = maxRate.max(i.getGstRate());
-            if (gst) {
-                BigDecimal taxable = backOut(gross, i.getGstRate());
-                BigDecimal tax = gross.subtract(taxable);
-                taxableTotal = taxableTotal.add(taxable);
-                taxTotal = taxTotal.add(tax);
-                addRow(t, String.valueOf(n++), i.getName() + " (" + i.getSku() + ")", nz(i.getHsnCode()), String.valueOf(i.getQty()),
-                        rs(i.getUnitPrice()), rs(taxable), rs(tax) + " @" + i.getGstRate().stripTrailingZeros().toPlainString() + "%", rs(gross));
-            } else {
-                addRow(t, String.valueOf(n++), i.getName() + " (" + i.getSku() + ")", String.valueOf(i.getQty()), rs(i.getUnitPrice()), rs(gross));
-            }
+        // ---- Header: logo | title + numbers ----
+        PdfPTable top = new PdfPTable(new float[] {50, 50});
+        top.setWidthPercentage(100);
+        PdfPCell logoCell = new PdfPCell();
+        logoCell.setBorder(Rectangle.NO_BORDER);
+        Image logo = Watermark.logo();
+        if (logo != null) {
+            logo.scaleToFit(118, 98);
+            logoCell.addElement(logo);
+        } else {
+            logoCell.addElement(new Phrase(seller.name(), H1));
         }
-        if (order.getShippingFee().signum() > 0) {
-            if (gst) {
-                BigDecimal taxable = backOut(order.getShippingFee(), maxRate);
-                BigDecimal tax = order.getShippingFee().subtract(taxable);
-                taxableTotal = taxableTotal.add(taxable);
-                taxTotal = taxTotal.add(tax);
-                addRow(t, "", "Shipping & handling", "9965", "1", rs(order.getShippingFee()), rs(taxable),
-                        rs(tax) + " @" + maxRate.stripTrailingZeros().toPlainString() + "%", rs(order.getShippingFee()));
+        top.addCell(logoCell);
+        PdfPCell titleCell = new PdfPCell();
+        titleCell.setBorder(Rectangle.NO_BORDER);
+        titleCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        Paragraph title = new Paragraph(gst ? "TAX INVOICE" : "INVOICE", H1);
+        title.setAlignment(Element.ALIGN_RIGHT);
+        titleCell.addElement(title);
+        Paragraph copy = new Paragraph("Original for Recipient", S);
+        copy.setAlignment(Element.ALIGN_RIGHT);
+        titleCell.addElement(copy);
+        Paragraph ids = new Paragraph("\nInvoice No: " + no + "\nInvoice Date: " + date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+                + "\nOrder No: " + order.getOrderNo()
+                + "\nOrder Date: " + order.getCreatedAt().atZoneSameInstant(IST).format(DateTimeFormatter.ofPattern("dd MMM yyyy")), N);
+        ids.setAlignment(Element.ALIGN_RIGHT);
+        titleCell.addElement(ids);
+        top.addCell(titleCell);
+        doc.add(top);
+        doc.add(new Paragraph(" ", S));
+
+        // ---- Seller | Buyer ----
+        PdfPTable parties = new PdfPTable(new float[] {50, 50});
+        parties.setWidthPercentage(100);
+        parties.addCell(party("Sold by",
+                legal,
+                (hasLegal ? "Brand: " + seller.name() + "\n" : "") + seller.address()
+                        + "\nState: " + seller.state() + stateCodeSuffix(seller.state())
+                        + (gst ? "\nGSTIN: " + seller.gstin() : "")
+                        + "\nEmail: " + nz(seller.email())
+                        + (seller.phone() == null || seller.phone().isBlank() ? "" : "\nPhone: " + seller.phone())));
+        parties.addCell(party("Billed & shipped to",
+                a.name(),
+                a.oneLine() + "\nState: " + a.state() + stateCodeSuffix(a.state())
+                        + "\nPhone: " + a.phone()
+                        + (customer.getEmail() == null ? "" : "\nEmail: " + customer.getEmail())));
+        doc.add(parties);
+
+        // ---- Supply details ----
+        PdfPTable meta = new PdfPTable(new float[] {34, 33, 33});
+        meta.setWidthPercentage(100);
+        meta.addCell(metaCell("Place of supply", a.state() + stateCodeSuffix(a.state())));
+        meta.addCell(metaCell("Payment mode", order.getPaymentMode().name().equals("COD") ? "Cash on Delivery" : "Prepaid (online)"));
+        meta.addCell(metaCell("Tax payable on reverse charge", "No"));
+        doc.add(meta);
+        doc.add(new Paragraph(" ", S));
+
+        // ---- Items ----
+        PdfPTable t;
+        if (gst && intra) {
+            t = new PdfPTable(new float[] {3.5f, 24, 7, 4.5f, 9.5f, 10.5f, 6.5f, 8.5f, 6.5f, 8.5f, 10.5f});
+            for (String c : new String[] {"#", "Description", "HSN", "Qty", "Rate (incl.)", "Taxable value", "CGST\nRate", "CGST\nAmt", "SGST\nRate", "SGST\nAmt", "Total"}) t.addCell(headerCell(c));
+        } else if (gst) {
+            t = new PdfPTable(new float[] {3.5f, 30, 8, 5, 11, 12, 6.5f, 10, 12});
+            for (String c : new String[] {"#", "Description", "HSN", "Qty", "Rate (incl.)", "Taxable value", "IGST\nRate", "IGST\nAmt", "Total"}) t.addCell(headerCell(c));
+        } else {
+            t = new PdfPTable(new float[] {4, 50, 8, 16, 16});
+            for (String c : new String[] {"#", "Description", "Qty", "Rate", "Total"}) t.addCell(headerCell(c));
+        }
+        t.setWidthPercentage(100);
+        t.setHeaderRows(1);
+
+        BigDecimal taxableTotal = BigDecimal.ZERO, cgstTotal = BigDecimal.ZERO, sgstTotal = BigDecimal.ZERO, igstTotal = BigDecimal.ZERO;
+        int n = 1;
+        for (Line l : lines) {
+            String num = l.description().startsWith("Shipping") ? "" : String.valueOf(n++);
+            if (!gst) {
+                addRow(t, num, l.description(), l.qty() + " Nos", money(l.rate()), money(l.gross()));
+                continue;
+            }
+            BigDecimal taxable = backOut(l.gross(), l.gstRate());
+            BigDecimal tax = l.gross().subtract(taxable);
+            taxableTotal = taxableTotal.add(taxable);
+            String rate = pct(l.gstRate());
+            if (intra) {
+                BigDecimal half = tax.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+                BigDecimal other = tax.subtract(half);
+                cgstTotal = cgstTotal.add(half);
+                sgstTotal = sgstTotal.add(other);
+                String halfRate = pct(l.gstRate().divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP));
+                addRow(t, num, l.description(), l.hsn(), String.valueOf(l.qty()), money(l.rate()), money(taxable),
+                        halfRate, money(half), halfRate, money(other), money(l.gross()));
             } else {
-                addRow(t, "", "Shipping & handling", "1", rs(order.getShippingFee()), rs(order.getShippingFee()));
+                igstTotal = igstTotal.add(tax);
+                addRow(t, num, l.description(), l.hsn(), String.valueOf(l.qty()), money(l.rate()), money(taxable), rate, money(tax), money(l.gross()));
             }
         }
         doc.add(t);
-        doc.add(new Paragraph(" ", S));
+        Paragraph inr = new Paragraph("All amounts in INR", S);
+        inr.setAlignment(Element.ALIGN_RIGHT);
+        doc.add(inr);
 
-        PdfPTable sum = new PdfPTable(new float[] {70, 30});
-        sum.setWidthPercentage(100);
-        if (gst) {
-            if (intra) {
-                BigDecimal half = taxTotal.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
-                sumRow(sum, "Taxable value", rs(taxableTotal));
-                sumRow(sum, "CGST", rs(half));
-                sumRow(sum, "SGST", rs(taxTotal.subtract(half)));
-            } else {
-                sumRow(sum, "Taxable value", rs(taxableTotal));
-                sumRow(sum, "IGST", rs(taxTotal));
-            }
+        // ---- Totals + amount in words ----
+        PdfPTable bottom = new PdfPTable(new float[] {58, 42});
+        bottom.setWidthPercentage(100);
+        bottom.setSpacingBefore(6);
+        PdfPCell words = new PdfPCell();
+        words.setBorder(Rectangle.NO_BORDER);
+        words.setPaddingTop(4);
+        words.addElement(new Phrase("Amount in words", S));
+        words.addElement(new Phrase(amountInWords(order.getTotal()), B));
+        if (order.getPaymentMode().name().equals("COD")) {
+            words.addElement(new Phrase("\nAmount to be collected on delivery: Rs. " + order.getTotal().setScale(2, RoundingMode.HALF_UP).toPlainString(), N));
         }
-        if (order.getDiscount().signum() > 0) sumRow(sum, "Discount", "- " + rs(order.getDiscount()));
-        PdfPCell l = new PdfPCell(new Phrase("Total", B));
-        l.setBorder(Rectangle.TOP);
-        l.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        PdfPCell r = new PdfPCell(new Phrase(rs(order.getTotal()), B));
-        r.setBorder(Rectangle.TOP);
-        r.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        sum.addCell(l);
-        sum.addCell(r);
-        doc.add(sum);
+        bottom.addCell(words);
+        PdfPTable sum = new PdfPTable(new float[] {60, 40});
+        if (gst) {
+            sumRow(sum, "Total taxable value", money(taxableTotal));
+            if (intra) {
+                sumRow(sum, "CGST", money(cgstTotal));
+                sumRow(sum, "SGST", money(sgstTotal));
+            } else {
+                sumRow(sum, "IGST", money(igstTotal));
+            }
+        } else {
+            sumRow(sum, "Subtotal", money(order.getSubtotal()));
+            if (order.getShippingFee().signum() > 0) sumRow(sum, "Shipping", money(order.getShippingFee()));
+        }
+        if (order.getDiscount().signum() > 0) sumRow(sum, "Discount", "- " + money(order.getDiscount()));
+        PdfPCell gl = new PdfPCell(new Phrase("Grand total (INR)", B));
+        gl.setBorder(Rectangle.TOP);
+        gl.setPaddingTop(5);
+        gl.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        PdfPCell gv = new PdfPCell(new Phrase("Rs. " + order.getTotal().setScale(2, RoundingMode.HALF_UP).toPlainString(), B));
+        gv.setBorder(Rectangle.TOP);
+        gv.setPaddingTop(5);
+        gv.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        sum.addCell(gl);
+        sum.addCell(gv);
+        PdfPCell sumCell = new PdfPCell(sum);
+        sumCell.setBorder(Rectangle.NO_BORDER);
+        bottom.addCell(sumCell);
+        doc.add(bottom);
 
-        doc.add(new Paragraph(" ", S));
-        doc.add(new Paragraph(gst ? "All prices are inclusive of GST."
-                : "Seller is not registered under GST; no GST has been charged.", S));
+        // ---- Notes ----
+        Paragraph notes = new Paragraph((gst ? "All prices are inclusive of GST. " : "Seller is not registered under GST; no GST has been charged. ")
+                + "Shipping charges are part of the supply of goods and taxed at the same rate."
+                + "\nReturns & refunds as per our policy at the website. For help: " + nz(seller.email())
+                + (seller.phone() == null || seller.phone().isBlank() ? "" : " / " + seller.phone()), S);
+        notes.setSpacingBefore(14);
+        doc.add(notes);
         Paragraph sys = new Paragraph("This is a system-generated invoice and does not require a signature.", B);
-        sys.setSpacingBefore(14);
+        sys.setSpacingBefore(16);
         sys.setAlignment(Element.ALIGN_CENTER);
         doc.add(sys);
+        Paragraph thanks = new Paragraph("Thank you for shopping with " + seller.name() + "!", N);
+        thanks.setAlignment(Element.ALIGN_CENTER);
+        doc.add(thanks);
         doc.close();
         return out.toByteArray();
+    }
+
+    private String hsn(String categoryHsn) {
+        if (categoryHsn != null && !categoryHsn.isBlank()) return categoryHsn.trim();
+        return seller.defaultHsn() == null ? "" : seller.defaultHsn().trim();
+    }
+
+    private static PdfPCell party(String label, String name, String details) {
+        PdfPCell c = new PdfPCell();
+        c.setPadding(7);
+        c.setBorderColor(Color.LIGHT_GRAY);
+        c.addElement(new Phrase(label.toUpperCase(), S));
+        c.addElement(new Phrase(name, B));
+        c.addElement(new Phrase(details, N));
+        return c;
+    }
+
+    private static PdfPCell metaCell(String label, String value) {
+        PdfPCell c = new PdfPCell();
+        c.setPadding(5);
+        c.setBorderColor(Color.LIGHT_GRAY);
+        c.addElement(new Phrase(label, S));
+        c.addElement(new Phrase(value, B));
+        return c;
+    }
+
+    private static String money(BigDecimal v) {
+        return v.setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    private static String pct(BigDecimal v) {
+        return v.stripTrailingZeros().toPlainString() + "%";
+    }
+
+    /** GST state codes (first two digits of a GSTIN). */
+    private static final java.util.Map<String, String> STATE_CODES = java.util.Map.ofEntries(
+            java.util.Map.entry("jammu and kashmir", "01"), java.util.Map.entry("himachal pradesh", "02"), java.util.Map.entry("punjab", "03"),
+            java.util.Map.entry("chandigarh", "04"), java.util.Map.entry("uttarakhand", "05"), java.util.Map.entry("haryana", "06"),
+            java.util.Map.entry("delhi", "07"), java.util.Map.entry("rajasthan", "08"), java.util.Map.entry("uttar pradesh", "09"),
+            java.util.Map.entry("bihar", "10"), java.util.Map.entry("sikkim", "11"), java.util.Map.entry("arunachal pradesh", "12"),
+            java.util.Map.entry("nagaland", "13"), java.util.Map.entry("manipur", "14"), java.util.Map.entry("mizoram", "15"),
+            java.util.Map.entry("tripura", "16"), java.util.Map.entry("meghalaya", "17"), java.util.Map.entry("assam", "18"),
+            java.util.Map.entry("west bengal", "19"), java.util.Map.entry("jharkhand", "20"), java.util.Map.entry("odisha", "21"),
+            java.util.Map.entry("chhattisgarh", "22"), java.util.Map.entry("madhya pradesh", "23"), java.util.Map.entry("gujarat", "24"),
+            java.util.Map.entry("dadra and nagar haveli and daman and diu", "26"), java.util.Map.entry("maharashtra", "27"),
+            java.util.Map.entry("karnataka", "29"), java.util.Map.entry("goa", "30"), java.util.Map.entry("lakshadweep", "31"),
+            java.util.Map.entry("kerala", "32"), java.util.Map.entry("tamil nadu", "33"), java.util.Map.entry("puducherry", "34"),
+            java.util.Map.entry("andaman and nicobar islands", "35"), java.util.Map.entry("telangana", "36"),
+            java.util.Map.entry("andhra pradesh", "37"), java.util.Map.entry("ladakh", "38"));
+
+    static String stateCodeSuffix(String state) {
+        String code = state == null ? null : STATE_CODES.get(state.trim().toLowerCase(java.util.Locale.ROOT));
+        return code == null ? "" : " (" + code + ")";
+    }
+
+    private static final String[] ONES = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven",
+            "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
+    private static final String[] TENS = {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
+
+    /** Indian numbering: 1,23,456.50 → "Rupees One Lakh Twenty-Three Thousand Four Hundred Fifty-Six and Fifty Paise Only". */
+    static String amountInWords(BigDecimal amount) {
+        BigDecimal v = amount.setScale(2, RoundingMode.HALF_UP);
+        long rupees = v.longValue();
+        int paise = v.remainder(BigDecimal.ONE).movePointRight(2).intValue();
+        String words = rupees == 0 ? "Zero" : indian(rupees);
+        return "Rupees " + words + (paise > 0 ? " and " + below100(paise) + " Paise" : "") + " Only";
+    }
+
+    private static String indian(long n) {
+        StringBuilder sb = new StringBuilder();
+        long crore = n / 10_000_000; n %= 10_000_000;
+        long lakh = n / 100_000; n %= 100_000;
+        long thousand = n / 1000; n %= 1000;
+        long hundred = n / 100; n %= 100;
+        if (crore > 0) sb.append(indian(crore)).append(" Crore ");
+        if (lakh > 0) sb.append(below100((int) lakh)).append(" Lakh ");
+        if (thousand > 0) sb.append(below100((int) thousand)).append(" Thousand ");
+        if (hundred > 0) sb.append(ONES[(int) hundred]).append(" Hundred ");
+        if (n > 0) sb.append(below100((int) n));
+        return sb.toString().trim();
+    }
+
+    private static String below100(int n) {
+        if (n < 20) return ONES[n];
+        return TENS[n / 10] + (n % 10 > 0 ? "-" + ONES[n % 10] : "");
     }
 
     /** Faint brand logo in the middle of every page. */
@@ -206,6 +372,14 @@ public class InvoiceService {
         private static byte[] load() {
             try (var in = InvoiceService.class.getResourceAsStream("/invoice/logo.png")) {
                 return in == null ? null : in.readAllBytes();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        static Image logo() {
+            try {
+                return LOGO == null ? null : Image.getInstance(LOGO);
             } catch (Exception e) {
                 return null;
             }
@@ -222,7 +396,7 @@ public class InvoiceService {
                 PdfContentByte under = writer.getDirectContentUnder();
                 under.saveState();
                 PdfGState gs = new PdfGState();
-                gs.setFillOpacity(0.07f);
+                gs.setFillOpacity(0.05f);
                 under.setGState(gs);
                 under.addImage(img);
                 under.restoreState();
