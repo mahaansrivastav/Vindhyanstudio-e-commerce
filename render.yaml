@@ -29,6 +29,7 @@ services:
       - { key: ADMIN_IDENTITIES, sync: false }
       # Business
       - { key: SELLER_NAME, value: Vindhyan Studio }
+      - { key: SELLER_LEGAL_NAME, value: MORVIN INTEGRATED SOLUTIONS }
       - { key: SELLER_ADDRESS, sync: false }
       - { key: SELLER_STATE, sync: false }
       - { key: SELLER_GSTIN, sync: false }

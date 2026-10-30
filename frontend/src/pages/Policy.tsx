@@ -48,7 +48,8 @@ export function Policy() {
   let p = POLICIES[slug]
   if (slug === 'contact' && config) {
     p = { title: 'Contact us', body: [
-      config.storeName,
+      config.legalName ? `${config.storeName} (a brand of ${config.legalName})` : config.storeName,
+      ...(config.gstin ? [`GSTIN: ${config.gstin}`] : []),
       `Email: ${config.sellerEmail}`,
       ...(config.sellerPhone ? [`Phone / WhatsApp: ${config.sellerPhone}`] : []),
       `Address: ${config.sellerAddress}`,

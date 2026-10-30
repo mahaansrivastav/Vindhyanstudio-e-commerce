@@ -37,6 +37,8 @@ app:
 
   seller:
     name: ${SELLER_NAME:Vindhyan Studio}
+    # Registered business that owns the brand (shown on invoices, footer). Blank = same as name.
+    legal-name: ${SELLER_LEGAL_NAME:}
     address: ${SELLER_ADDRESS:Address line, City, State - 000000}
     state: ${SELLER_STATE:Madhya Pradesh}
     gstin: ${SELLER_GSTIN:}

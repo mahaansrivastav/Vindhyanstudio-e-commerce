@@ -24,6 +24,8 @@ public class PublicConfigController {
         m.put("storeName", props.seller().name());
         // Business details shown on the payment, contact and policy pages (payment gateways check these).
         m.put("sellerAddress", props.seller().address());
+        m.put("legalName", props.seller().legalName());
+        m.put("gstin", props.seller().gstin());
         m.put("sellerEmail", props.seller().email());
         m.put("sellerPhone", props.seller().phone());
         m.put("whatsapp", props.seller().whatsapp());

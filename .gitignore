@@ -28,3 +28,4 @@ backend/.env.production.local
 # Owner's working sheet has cost prices; keep it out of the public repo
 catalogue/catalogue.xlsx
 docs/catalogue-source/
+vindhyan-netlify-dist.zip

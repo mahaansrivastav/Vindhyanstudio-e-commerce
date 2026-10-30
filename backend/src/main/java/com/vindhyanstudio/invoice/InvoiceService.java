@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfGState;
+import com.lowagie.text.pdf.PdfPageEventHelper;
 import com.lowagie.text.pdf.PdfWriter;
 import com.vindhyanstudio.config.AppProperties;
 import com.vindhyanstudio.customer.Customer;
@@ -95,7 +98,8 @@ public class InvoiceService {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document doc = new Document(PageSize.A4, 36, 36, 36, 36);
-        PdfWriter.getInstance(doc, out);
+        PdfWriter writer = PdfWriter.getInstance(doc, out);
+        writer.setPageEvent(new Watermark());
         doc.open();
 
         doc.add(new Paragraph(gst ? "TAX INVOICE" : "INVOICE", H1));
@@ -103,8 +107,16 @@ public class InvoiceService {
 
         PdfPTable head = new PdfPTable(2);
         head.setWidthPercentage(100);
-        head.addCell(box(seller.name() + "\n" + seller.address()
-                + (gst ? "\nGSTIN: " + seller.gstin() : "") + (seller.email() == null ? "" : "\n" + seller.email())));
+        boolean hasLegal = seller.legalName() != null && !seller.legalName().isBlank();
+        PdfPCell sellerCell = new PdfPCell();
+        sellerCell.setPadding(6);
+        sellerCell.setBorderColor(Color.LIGHT_GRAY);
+        sellerCell.addElement(new Phrase(hasLegal ? seller.legalName() : seller.name(), B));
+        sellerCell.addElement(new Phrase((hasLegal ? "(Brand: " + seller.name() + ")\n" : "") + seller.address()
+                + (gst ? "\nGSTIN: " + seller.gstin() : "")
+                + (seller.email() == null ? "" : "\n" + seller.email())
+                + (seller.phone() == null || seller.phone().isBlank() ? "" : "\n" + seller.phone()), N));
+        head.addCell(sellerCell);
         head.addCell(box("Invoice No: " + no + "\nInvoice Date: " + date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
                 + "\nOrder No: " + order.getOrderNo() + "\nPayment: " + (order.getPaymentMode().name().equals("COD") ? "Cash on Delivery" : "Prepaid (online)")
                 + "\nPlace of supply: " + a.state()));
@@ -177,10 +189,47 @@ public class InvoiceService {
         doc.add(sum);
 
         doc.add(new Paragraph(" ", S));
-        doc.add(new Paragraph(gst ? "All prices are inclusive of GST. This is a computer-generated invoice and needs no signature."
-                : "Seller is not registered under GST; no GST has been charged. This is a computer-generated invoice.", S));
+        doc.add(new Paragraph(gst ? "All prices are inclusive of GST."
+                : "Seller is not registered under GST; no GST has been charged.", S));
+        Paragraph sys = new Paragraph("This is a system-generated invoice and does not require a signature.", B);
+        sys.setSpacingBefore(14);
+        sys.setAlignment(Element.ALIGN_CENTER);
+        doc.add(sys);
         doc.close();
         return out.toByteArray();
+    }
+
+    /** Faint brand logo in the middle of every page. */
+    private static final class Watermark extends PdfPageEventHelper {
+        private static final byte[] LOGO = load();
+
+        private static byte[] load() {
+            try (var in = InvoiceService.class.getResourceAsStream("/invoice/logo.png")) {
+                return in == null ? null : in.readAllBytes();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            if (LOGO == null) return;
+            try {
+                Image img = Image.getInstance(LOGO);
+                img.scaleToFit(320, 320);
+                Rectangle page = document.getPageSize();
+                img.setAbsolutePosition((page.getWidth() - img.getScaledWidth()) / 2, (page.getHeight() - img.getScaledHeight()) / 2);
+                PdfContentByte under = writer.getDirectContentUnder();
+                under.saveState();
+                PdfGState gs = new PdfGState();
+                gs.setFillOpacity(0.07f);
+                under.setGState(gs);
+                under.addImage(img);
+                under.restoreState();
+            } catch (Exception ignored) {
+                // watermark is decorative
+            }
+        }
     }
 
     private static BigDecimal backOut(BigDecimal gross, BigDecimal rate) {

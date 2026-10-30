@@ -26,7 +26,7 @@ public record AppProperties(
         return split(corsOrigins);
     }
 
-    public record Seller(String name, String address, String state, String gstin, String email, String phone, String whatsapp) {}
+    public record Seller(String name, String legalName, String address, String state, String gstin, String email, String phone, String whatsapp) {}
 
     public record Admin(String identities) {
         public List<String> identityList() {

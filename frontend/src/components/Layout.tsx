@@ -39,8 +39,11 @@ export function Layout() {
       <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-6">
           <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="Vindhyan Studio home">
-            <img src="/favicon.svg" alt="" className="h-9 w-9" />
-            <span className="hidden text-lg font-extrabold leading-none tracking-tight sm:block">Vindhyan<span className="text-brand"> Studio</span></span>
+            <img src="/brand/logo-mark.png" alt="" className="h-9 w-auto" />
+            <span className="hidden leading-none sm:block">
+              <span className="block text-lg font-extrabold tracking-[0.12em]">VINDHYAN</span>
+              <span className="block text-[10px] font-medium tracking-[0.42em] text-muted">STUDIO</span>
+            </span>
           </Link>
           <form onSubmit={search} className="relative mx-auto w-full max-w-xl" role="search">
             <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -84,7 +87,7 @@ export function Layout() {
       <footer className="mt-12 border-t border-line bg-surface">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-lg font-extrabold">Vindhyan<span className="text-brand"> Studio</span></p>
+            <img src="/brand/logo-full.png" alt="Vindhyan Studio, your idea, our creation" className="h-24 w-auto" />
             <p className="mt-2 text-muted">Your idea, our creation. Personalised 3D printed keychains, gifts, décor and more, printed to order and shipped across India.</p>
             {config?.sellerPhone && <p className="mt-3 text-muted">WhatsApp / call: <a className="font-semibold text-ink hover:text-brand" href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noopener">{config.sellerPhone}</a></p>}
           </div>
@@ -94,7 +97,11 @@ export function Layout() {
         </div>
         <div className="border-t border-line">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-muted">
-            <span>© {new Date().getFullYear()} Vindhyan Studio. All rights reserved.</span>
+            <span>
+              © {new Date().getFullYear()} Vindhyan Studio{config?.legalName ? <>, a brand of {config.legalName}</> : null}. All rights reserved.
+              {config?.gstin && <> · GSTIN {config.gstin}</>}
+              {config?.sellerAddress && <span className="block sm:inline"> · {config.sellerAddress}</span>}
+            </span>
             <a href={DEVELOPER_URL} target="_blank" rel="noopener" className="hover:text-ink">
               Powered by <b className="font-semibold text-ink underline decoration-brand/40 underline-offset-2">Mahaan Srivastav</b>
             </a>

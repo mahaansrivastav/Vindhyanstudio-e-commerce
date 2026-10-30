@@ -3,6 +3,8 @@
 export interface PublicConfig {
   storeName: string
   sellerAddress: string
+  legalName: string | null
+  gstin: string | null
   sellerEmail: string
   sellerPhone: string
   whatsapp: string
