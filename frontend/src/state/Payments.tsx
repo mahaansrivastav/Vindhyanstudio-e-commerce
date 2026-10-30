@@ -15,11 +15,11 @@ export const usePay = () => useContext(PayCtx)
 
 type Result = { providerOrderId: string; providerPaymentId: string; signature: string } | null
 
-function loadRazorpay(): Promise<void> {
-  if (window.Razorpay) return Promise.resolve()
+function loadScript(src: string, ready: () => boolean): Promise<void> {
+  if (ready()) return Promise.resolve()
   return new Promise((resolve, reject) => {
     const s = document.createElement('script')
-    s.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    s.src = src
     s.onload = () => resolve()
     s.onerror = () => reject(new Error('Could not load the payment window. Check your connection.'))
     document.body.appendChild(s)
@@ -31,8 +31,16 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   const resolver = useRef<(r: Result) => void>(() => {})
 
   const collect = useCallback(async (init: PaymentInit, method?: PayMethod): Promise<Result> => {
+    if (init.provider === 'cashfree') {
+      await loadScript('https://sdk.cashfree.com/js/v3/cashfree.js', () => !!window.Cashfree)
+      const cf = window.Cashfree!({ mode: init.mode ?? 'sandbox' })
+      const result = await cf.checkout({ paymentSessionId: init.sessionToken!, redirectTarget: '_modal' })
+      if (result.error && !result.paymentDetails) return null // closed or failed; server reconciles anyway
+      // Cashfree has no client signature: the server confirms the order status with Cashfree.
+      return { providerOrderId: init.providerOrderId, providerPaymentId: '', signature: '' }
+    }
     if (init.provider === 'razorpay') {
-      await loadRazorpay()
+      await loadScript('https://checkout.razorpay.com/v1/checkout.js', () => !!window.Razorpay)
       return new Promise<Result>((resolve) => {
         const rzp = new window.Razorpay!({
           key: init.keyId,

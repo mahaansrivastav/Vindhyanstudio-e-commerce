@@ -1,5 +1,6 @@
 package com.vindhyanstudio.payment;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,4 +11,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findFirstByProviderOrderId(String providerOrderId);
 
     List<Payment> findByOrderIdOrderByIdDesc(Long orderId);
+
+    /** Unfinished attempts in a time window: candidates for reconciliation. */
+    List<Payment> findByStatusInAndCreatedAtBetween(List<Payment.Status> statuses, OffsetDateTime from, OffsetDateTime to);
 }

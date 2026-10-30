@@ -134,9 +134,12 @@ public class ShiprocketShippingProvider implements ShippingProvider {
 
     @Override
     public Booked book(String shipmentId) {
+        Map<String, Object> awbBody = new LinkedHashMap<>();
+        awbBody.put("shipment_id", shipmentId);
+        if (cfg.courierId() != null && !cfg.courierId().isBlank()) awbBody.put("courier_id", cfg.courierId().trim());
         JsonNode awbRes = http.post().uri("/courier/assign/awb").contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token())
-                .body(Map.of("shipment_id", shipmentId)).retrieve().body(JsonNode.class);
+                .body(awbBody).retrieve().body(JsonNode.class);
         JsonNode data = awbRes.path("response").path("data");
         String awb = data.path("awb_code").asString();
         if (awb.isEmpty()) throw new IllegalStateException("AWB not assigned: " + awbRes);
@@ -161,5 +164,12 @@ public class ShiprocketShippingProvider implements ShippingProvider {
             log.warn("Shiprocket label generation failed for shipment {}", shipmentId, e);
         }
         return new Booked(awb, courier, label, "https://shiprocket.co/tracking/" + awb);
+    }
+
+    @Override
+    public void cancel(String providerOrderId) {
+        http.post().uri("/orders/cancel").contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token())
+                .body(Map.of("ids", List.of(providerOrderId))).retrieve().toBodilessEntity();
     }
 }

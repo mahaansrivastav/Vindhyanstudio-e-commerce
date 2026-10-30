@@ -82,11 +82,18 @@ app:
     cod-max-order-value: ${COD_MAX_ORDER_VALUE:3000}
 
   payment:
-    provider: ${PAYMENT_PROVIDER:mock}         # mock (local only) | disabled (COD only) | razorpay
+    # mock (local only) | disabled (COD only) | razorpay | cashfree
+    provider: ${PAYMENT_PROVIDER:mock}
+    # Refund automatically through the gateway when the owner cancels a paid order.
+    refund-on-cancel: ${PAYMENT_REFUND_ON_CANCEL:true}
     razorpay:
       key-id: ${RAZORPAY_KEY_ID:}
       key-secret: ${RAZORPAY_KEY_SECRET:}
       webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+    cashfree:
+      app-id: ${CASHFREE_APP_ID:}
+      secret-key: ${CASHFREE_SECRET_KEY:}
+      environment: ${CASHFREE_ENV:sandbox}       # sandbox | production
 
   shipping:
     provider: ${SHIPPING_PROVIDER:mock}        # mock (local only) | manual (owner books courier) | shiprocket
@@ -96,6 +103,12 @@ app:
       pickup-location: ${SHIPROCKET_PICKUP_LOCATION:Primary}
       pickup-pincode: ${SHIPROCKET_PICKUP_PINCODE:}
       webhook-token: ${SHIPROCKET_WEBHOOK_TOKEN:}
+      # Optional: force one courier (id from Shiprocket); blank = Shiprocket's recommended courier.
+      courier-id: ${SHIPROCKET_COURIER_ID:}
+      # true = book the courier right after payment; false = when the owner clicks "Packed" (made-to-order).
+      auto-book: ${SHIPROCKET_AUTO_BOOK:false}
+      # Cancel the Shiprocket order when the owner cancels the order.
+      cancel-on-order-cancel: ${SHIPROCKET_CANCEL_ON_ORDER_CANCEL:true}
 
   notifications:
     email: ${NOTIFY_EMAIL:console}             # console | smtp

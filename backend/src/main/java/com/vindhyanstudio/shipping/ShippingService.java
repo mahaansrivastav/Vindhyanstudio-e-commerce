@@ -15,6 +15,7 @@ import com.vindhyanstudio.catalogue.Category;
 import com.vindhyanstudio.catalogue.Product;
 import com.vindhyanstudio.catalogue.ProductRepository;
 import com.vindhyanstudio.common.ApiException;
+import com.vindhyanstudio.config.AppProperties;
 import com.vindhyanstudio.customer.CustomerRepository;
 import com.vindhyanstudio.order.Order;
 import com.vindhyanstudio.order.OrderItem;
@@ -32,9 +33,12 @@ public class ShippingService {
     private final CustomerRepository customers;
     private final OrderRepository orders;
 
+    private final AppProperties.Shipping cfg;
+
     public ShippingService(ShippingProvider provider, ShipmentRepository shipments, ProductRepository products,
-                           CustomerRepository customers, OrderRepository orders) {
+                           CustomerRepository customers, OrderRepository orders, AppProperties props) {
         this.orders = orders;
+        this.cfg = props.shipping();
         this.provider = provider;
         this.shipments = shipments;
         this.products = products;
@@ -82,6 +86,27 @@ public class ShippingService {
             throw ApiException.badRequest("Courier booking failed: " + e.getMessage());
         }
         return s;
+    }
+
+    /** SHIPROCKET_AUTO_BOOK=true: book the courier straight after payment (ready-stock items). */
+    public boolean autoBook() {
+        return cfg.shiprocket() != null && cfg.shiprocket().autoBook() && !"manual".equals(provider.name());
+    }
+
+    /** Owner cancelled the order: cancel it at the courier aggregator too. Never throws. */
+    @Transactional
+    public String cancel(Long orderId) {
+        if (cfg.shiprocket() != null && !cfg.shiprocket().cancelOnOrderCancel() && "shiprocket".equals(provider.name())) return null;
+        Shipment s = shipments.findByOrderId(orderId).orElse(null);
+        if (s == null || s.getProviderOrderId() == null) return null;
+        try {
+            provider.cancel(s.getProviderOrderId());
+            s.providerStatus("CANCELLED");
+            return "Shipment cancelled at " + provider.name();
+        } catch (Exception e) {
+            log.error("Shipment cancel failed for order {}", orderId, e);
+            return "Couldn't cancel the shipment automatically; cancel it in the " + provider.name() + " dashboard";
+        }
     }
 
     @Transactional

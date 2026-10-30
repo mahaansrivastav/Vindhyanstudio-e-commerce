@@ -50,7 +50,10 @@ public class FulfilmentListener {
     @TransactionalEventListener
     public void onConfirmed(OrderConfirmedEvent e) {
         step("invoice", e.orderId(), () -> invoices.generate(e.orderId()));
-        step("shipment", e.orderId(), () -> shipping.create(e.orderId()));
+        step("shipment", e.orderId(), () -> {
+            shipping.create(e.orderId());
+            if (shipping.autoBook()) orders.changeStatus(e.orderId(), OrderStatus.READY, "Courier booked automatically", "system");
+        });
         step("notify", e.orderId(), () -> {
             OrderView o = orders.view(e.orderId(), true);
             String link = props.frontendUrl() + "/account/orders/" + o.id();
@@ -77,6 +80,12 @@ public class FulfilmentListener {
     @Async
     @TransactionalEventListener
     public void onStatusChanged(OrderStatusChangedEvent e) {
+        if (e.status() == OrderStatus.CANCELLED) {
+            step("shipment cancel", e.orderId(), () -> {
+                String note = shipping.cancel(e.orderId());
+                if (note != null) orders.addNote(e.orderId(), note, "system");
+            });
+        }
         step("status notify", e.orderId(), () -> {
             OrderView o = orders.view(e.orderId(), true);
             String link = props.frontendUrl() + "/account/orders/" + o.id();

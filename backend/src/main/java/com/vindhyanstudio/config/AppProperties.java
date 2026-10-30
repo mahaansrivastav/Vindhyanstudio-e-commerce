@@ -46,13 +46,15 @@ public record AppProperties(
     public record Pricing(BigDecimal shippingFlatFee, BigDecimal freeShippingAbove,
                           boolean codEnabled, BigDecimal codMaxOrderValue) {}
 
-    public record Payment(String provider, Razorpay razorpay) {
+    public record Payment(String provider, boolean refundOnCancel, Razorpay razorpay, Cashfree cashfree) {
         public record Razorpay(String keyId, String keySecret, String webhookSecret) {}
+        public record Cashfree(String appId, String secretKey, String environment) {}
     }
 
     public record Shipping(String provider, Shiprocket shiprocket) {
         public record Shiprocket(String email, String password, String pickupLocation,
-                                 String pickupPincode, String webhookToken) {}
+                                 String pickupPincode, String webhookToken, String courierId,
+                                 boolean autoBook, boolean cancelOnOrderCancel) {}
     }
 
     public record Notifications(String email, String sms, String fromEmail) {}

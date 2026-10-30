@@ -1,24 +1,23 @@
 package com.vindhyanstudio.payment;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.vindhyanstudio.common.CurrentUser;
-import com.vindhyanstudio.common.Json;
 
-import tools.jackson.databind.JsonNode;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class PaymentController {
 
     private final PaymentService payments;
-    private final PaymentGateway gateway;
 
-    public PaymentController(PaymentService payments, PaymentGateway gateway) {
+    public PaymentController(PaymentService payments) {
         this.payments = payments;
-        this.gateway = gateway;
     }
 
     public record VerifyRequest(String providerOrderId, String providerPaymentId, String signature) {}
@@ -29,19 +28,14 @@ public class PaymentController {
         return Map.of("orderId", orderId);
     }
 
-    @PostMapping("/api/webhooks/razorpay")
-    ResponseEntity<Void> razorpayWebhook(@RequestBody String body,
-                                         @RequestHeader(name = "X-Razorpay-Signature", required = false) String signature) {
-        if (!gateway.verifyWebhook(body, signature)) return ResponseEntity.status(401).build();
-        JsonNode root = Json.mapper().readTree(body);
-        String event = root.path("event").asString();
-        JsonNode entity = root.path("payload").path("payment").path("entity");
-        String orderId = entity.path("order_id").asString();
-        String paymentId = entity.path("id").asString();
-        if (!orderId.isEmpty()) {
-            if (event.equals("payment.captured") || event.equals("order.paid")) payments.onProviderEvent(orderId, paymentId, true);
-            if (event.equals("payment.failed")) payments.onProviderEvent(orderId, paymentId, false);
-        }
-        return ResponseEntity.ok().build();
+    /**
+     * One webhook URL for whichever gateway is active (PAYMENT_PROVIDER). The raw body is kept
+     * as-is because signatures are computed over the exact bytes. /razorpay is kept as an alias.
+     */
+    @PostMapping({"/api/webhooks/payments", "/api/webhooks/razorpay"})
+    ResponseEntity<Void> webhook(@RequestBody String rawBody, HttpServletRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        for (String name : Collections.list(request.getHeaderNames())) headers.put(name.toLowerCase(), request.getHeader(name));
+        return payments.onWebhook(rawBody, headers) ? ResponseEntity.ok().build() : ResponseEntity.status(401).build();
     }
 }

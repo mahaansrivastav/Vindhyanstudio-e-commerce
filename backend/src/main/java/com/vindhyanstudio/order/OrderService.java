@@ -116,6 +116,12 @@ public class OrderService {
         confirm(o.getId(), "Customer chose cash on delivery", "customer");
     }
 
+    /** Adds a note to the order timeline without changing its status. */
+    @Transactional
+    public void addNote(Long orderId, String note, String actor) {
+        get(orderId).note(note, actor);
+    }
+
     public Order get(Long id) {
         return orders.findById(id).orElseThrow(() -> ApiException.notFound("Order not found"));
     }

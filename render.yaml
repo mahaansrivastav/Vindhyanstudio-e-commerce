@@ -1,0 +1,74 @@
+# Render Blueprint: render.com → New → Blueprint → pick this repo.
+# Secrets marked "sync: false" are asked for in the dashboard (never stored in git).
+# The same values work on any other host (Railway, Fly, a VPS); see DEPLOYMENT.md.
+services:
+  - type: web
+    name: vindhyan-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    region: singapore          # closest Render region to India
+    plan: starter              # "free" works for testing but sleeps after 15 min idle
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JAVA_OPTS
+        value: -XX:MaxRAMPercentage=75
+      # Database (Supabase session pooler)
+      - { key: DB_URL, sync: false }
+      - { key: DB_USERNAME, sync: false }
+      - { key: DB_PASSWORD, sync: false }
+      # URLs
+      - { key: APP_PUBLIC_BASE_URL, sync: false }
+      - { key: APP_FRONTEND_URL, sync: false }
+      - { key: APP_CORS_ORIGINS, sync: false }
+      - { key: ADMIN_IDENTITIES, sync: false }
+      # Business
+      - { key: SELLER_NAME, value: Vindhyan Studio }
+      - { key: SELLER_ADDRESS, sync: false }
+      - { key: SELLER_STATE, sync: false }
+      - { key: SELLER_GSTIN, sync: false }
+      - { key: SELLER_EMAIL, sync: false }
+      - { key: SELLER_PHONE, value: "+91 94559 38254" }
+      - { key: SELLER_WHATSAPP, value: "919455938254" }
+      # Storage
+      - { key: STORAGE_PROVIDER, value: supabase }
+      - { key: SUPABASE_URL, sync: false }
+      - { key: SUPABASE_SERVICE_KEY, sync: false }
+      - { key: SUPABASE_PUBLIC_BUCKET, value: catalogue }
+      - { key: SUPABASE_PRIVATE_BUCKET, value: private }
+      # Email (Brevo SMTP)
+      - { key: NOTIFY_EMAIL, value: smtp }
+      - { key: NOTIFY_FROM_EMAIL, sync: false }
+      - { key: SPRING_MAIL_HOST, value: smtp-relay.brevo.com }
+      - { key: SPRING_MAIL_PORT, value: "587" }
+      - { key: SPRING_MAIL_USERNAME, sync: false }
+      - { key: SPRING_MAIL_PASSWORD, sync: false }
+      - { key: SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH, value: "true" }
+      - { key: SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE, value: "true" }
+      - { key: NOTIFY_SMS, value: console }
+      # Payments: disabled | razorpay | cashfree  (change here, then fill that gateway's keys)
+      - { key: PAYMENT_PROVIDER, value: disabled }
+      - { key: RAZORPAY_KEY_ID, sync: false }
+      - { key: RAZORPAY_KEY_SECRET, sync: false }
+      - { key: RAZORPAY_WEBHOOK_SECRET, sync: false }
+      - { key: CASHFREE_APP_ID, sync: false }
+      - { key: CASHFREE_SECRET_KEY, sync: false }
+      - { key: CASHFREE_ENV, value: sandbox }
+      # Shipping: manual | shiprocket
+      - { key: SHIPPING_PROVIDER, value: manual }
+      - { key: SHIPROCKET_EMAIL, sync: false }
+      - { key: SHIPROCKET_PASSWORD, sync: false }
+      - { key: SHIPROCKET_PICKUP_LOCATION, value: Primary }
+      - { key: SHIPROCKET_PICKUP_PINCODE, sync: false }
+      - { key: SHIPROCKET_WEBHOOK_TOKEN, sync: false }
+      - { key: SHIPROCKET_AUTO_BOOK, value: "false" }
+      # Pricing
+      - { key: SHIPPING_FLAT_FEE, value: "60" }
+      - { key: FREE_SHIPPING_ABOVE, value: "999" }
+      - { key: COD_ENABLED, value: "true" }
+      - { key: COD_MAX_ORDER_VALUE, value: "3000" }

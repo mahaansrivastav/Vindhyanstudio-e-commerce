@@ -9,7 +9,7 @@ import jakarta.persistence.*;
 @Table(name = "payments")
 public class Payment {
 
-    public enum Status { CREATED, PAID, FAILED }
+    public enum Status { CREATED, PAID, FAILED, REFUNDED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +21,9 @@ public class Payment {
     private BigDecimal amount;
     @Enumerated(EnumType.STRING)
     private Status status = Status.CREATED;
+    private String refundId;
     private OffsetDateTime createdAt = OffsetDateTime.now();
+    private OffsetDateTime updatedAt;
 
     protected Payment() {}
 
@@ -32,19 +34,31 @@ public class Payment {
         this.amount = amount;
     }
 
+    public Long getId() { return id; }
     public Long getOrderId() { return orderId; }
     public String getProvider() { return provider; }
     public String getProviderOrderId() { return providerOrderId; }
     public String getProviderPaymentId() { return providerPaymentId; }
+    public BigDecimal getAmount() { return amount; }
     public Status getStatus() { return status; }
+    public String getRefundId() { return refundId; }
+    public OffsetDateTime getCreatedAt() { return createdAt; }
 
     void markPaid(String providerPaymentId) {
         this.status = Status.PAID;
-        this.providerPaymentId = providerPaymentId;
+        if (providerPaymentId != null && !providerPaymentId.isBlank()) this.providerPaymentId = providerPaymentId;
+        this.updatedAt = OffsetDateTime.now();
     }
 
     void markFailed(String providerPaymentId) {
-        if (status != Status.PAID) this.status = Status.FAILED;
-        if (providerPaymentId != null) this.providerPaymentId = providerPaymentId;
+        if (status == Status.CREATED) this.status = Status.FAILED;
+        if (providerPaymentId != null && !providerPaymentId.isBlank() && this.providerPaymentId == null) this.providerPaymentId = providerPaymentId;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    void markRefunded(String refundId) {
+        this.status = Status.REFUNDED;
+        this.refundId = refundId;
+        this.updatedAt = OffsetDateTime.now();
     }
 }

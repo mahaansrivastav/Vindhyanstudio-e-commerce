@@ -22,6 +22,9 @@ public interface ShippingProvider {
     /** Books a courier, schedules pickup and fetches the label (called when the owner marks the order READY). */
     Booked book(String shipmentId) throws Exception;
 
+    /** Cancels the provider-side order (e.g. the owner cancelled). Default: nothing to cancel. */
+    default void cancel(String providerOrderId) throws Exception {}
+
     record Serviceability(boolean serviceable, Integer etaDays, boolean codAvailable) {}
 
     record Item(String name, String sku, int units, BigDecimal unitPrice, String hsn) {}

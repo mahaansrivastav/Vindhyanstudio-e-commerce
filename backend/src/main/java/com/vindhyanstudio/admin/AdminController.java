@@ -12,6 +12,8 @@ import com.vindhyanstudio.order.OrderService;
 import com.vindhyanstudio.order.OrderStatus;
 import com.vindhyanstudio.order.OrderView;
 import com.vindhyanstudio.shipping.ShippingService;
+import com.vindhyanstudio.config.AppProperties;
+import com.vindhyanstudio.payment.PaymentService;
 
 /** Owner screens (S10). Everything under /api/admin requires the ADMIN role (see SecurityConfig). */
 @RestController
@@ -22,8 +24,13 @@ public class AdminController {
     private final ShippingService shipping;
     private final CatalogueSyncService sync;
     private final SyncRunRepository runs;
+    private final PaymentService payments;
+    private final AppProperties props;
 
-    public AdminController(OrderService orders, ShippingService shipping, CatalogueSyncService sync, SyncRunRepository runs) {
+    public AdminController(OrderService orders, ShippingService shipping, CatalogueSyncService sync, SyncRunRepository runs,
+                           PaymentService payments, AppProperties props) {
+        this.payments = payments;
+        this.props = props;
         this.orders = orders;
         this.shipping = shipping;
         this.sync = sync;
@@ -57,6 +64,7 @@ public class AdminController {
     @PostMapping("/orders/{id}/status")
     OrderView changeStatus(@PathVariable Long id, @RequestBody StatusChange body) {
         orders.changeStatus(id, body.status(), body.note(), "admin");
+        if (body.status() == OrderStatus.CANCELLED && props.payment().refundOnCancel()) payments.refundIfPaid(id);
         return orders.view(id, true);
     }
 

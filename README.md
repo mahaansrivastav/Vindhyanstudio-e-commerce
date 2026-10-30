@@ -63,8 +63,8 @@ Every integration sits behind an interface with a mock, so you can switch them o
 
 | Integration | Interface | Implementations | Switch |
 |---|---|---|---|
-| Payments | `payment/PaymentGateway` | `MockPaymentGateway`, `RazorpayPaymentGateway` | `PAYMENT_PROVIDER` |
-| Shipping | `shipping/ShippingProvider` | `MockShippingProvider`, `ShiprocketShippingProvider` | `SHIPPING_PROVIDER` |
+| Payments | `payment/PaymentGateway` | Mock (local), Disabled (COD only), Razorpay, Cashfree | `PAYMENT_PROVIDER` |
+| Shipping | `shipping/ShippingProvider` | Mock (local), Manual, Shiprocket | `SHIPPING_PROVIDER` |
 | Email / SMS | `notify/MessageSender` | console, `SmtpEmailSender` | `NOTIFY_EMAIL`, `NOTIFY_SMS` |
 | File storage | `storage/StorageService` | `LocalStorageService`, `SupabaseStorageService` | `STORAGE_PROVIDER` |
 | Catalogue | `catalogue/sync/CatalogueSource` | `LocalExcelCatalogueSource` | `CATALOGUE_SOURCE` |
@@ -74,7 +74,7 @@ To add another provider (e.g. Cashfree or MSG91), implement the interface, annot
 ### Razorpay (payments)
 1. Sign up at razorpay.com. **Test mode** keys work immediately.
 2. Set `PAYMENT_PROVIDER=razorpay`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`.
-3. Dashboard → Webhooks → add `{APP_PUBLIC_BASE_URL}/api/webhooks/razorpay` with events `payment.captured` and `payment.failed`, then set the same secret in `RAZORPAY_WEBHOOK_SECRET`.
+3. Dashboard → Webhooks → add `{APP_PUBLIC_BASE_URL}/api/webhooks/payments` with events `payment.captured` and `payment.failed`, then set the same secret in `RAZORPAY_WEBHOOK_SECRET`.
 4. Live mode needs KYC. The site's policy pages (`/policies/*`) must have real content first; they're drafts now.
 
 ### Shiprocket (shipping)
@@ -145,4 +145,6 @@ Online orders go **Cart → Address (checkout) → Payment** (`/pay/<orderId>`).
 Public: `GET /api/config`, `GET /api/catalogue/{categories,products,products/{slug}}`, `POST /api/cart/quote`, `GET /api/shipping/serviceability`, `POST /api/auth/otp/{request,verify}`
 Customer: `/api/me`, `/api/me/addresses`, `/api/me/link/*`, `POST /api/uploads`, `/api/orders`, `/api/orders/{id}/pay`, `POST /api/orders/{id}/cod`, `/api/orders/{id}/invoice`, `POST /api/payments/verify`
 Admin: `/api/admin/summary`, `/api/admin/orders`, `POST /api/admin/orders/{id}/status`, `/api/admin/products` (+ `/images`, `/images/order`, `/take-over`), `/api/admin/categories`, `POST /api/admin/catalogue/sync`
-Webhooks: `/api/webhooks/razorpay`, `/api/webhooks/tracking`
+Webhooks: `/api/webhooks/payments` (active gateway), `/api/webhooks/tracking` (Shiprocket)
+
+> Full production setup (Render/Supabase/Vercel, payment gateway and Shiprocket onboarding): see **DEPLOYMENT.md**.

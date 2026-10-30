@@ -74,7 +74,7 @@ export interface OrderView {
 }
 
 export interface PaymentInit {
-  provider: string; keyId: string | null; providerOrderId: string; amountPaise: number; currency: string
+  provider: string; keyId: string | null; mode: string | null; sessionToken: string | null; providerOrderId: string; amountPaise: number; currency: string
   orderId: number; orderNo: string; name: string | null; email: string | null; phone: string | null
 }
 
