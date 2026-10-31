@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+// Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
 const BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 const TOKEN_KEY = 'vs_token'
 

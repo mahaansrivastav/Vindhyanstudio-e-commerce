@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+// Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
 // Small inline icon set (stroke icons, inherit currentColor).
 type P = { className?: string }
 const base = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }

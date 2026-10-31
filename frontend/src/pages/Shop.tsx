@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+// Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
 import { Link, useSearchParams } from 'react-router-dom'
 import { ProductCard } from '../components/ProductCard'
 import { Empty, ErrorBox, Spinner } from '../components/ui'

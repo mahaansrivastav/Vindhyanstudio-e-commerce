@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+ * Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
+ */
 package com.vindhyanstudio.config;
 
 import java.lang.management.ManagementFactory;
@@ -85,6 +89,7 @@ public class StartupReport {
 
         line(b, "=".repeat(72));
         line(b, "  VINDHYAN STUDIO BACKEND IS UP   [" + stage + "]");
+        line(b, "  Software (c) 2026 Mahan Srivastava. All rights reserved. Licensed, not sold (see LICENSE).");
         line(b, "=".repeat(72));
 
         section(b, "Build & host");

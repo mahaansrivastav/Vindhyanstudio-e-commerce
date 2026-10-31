@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+// Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
+/*! Vindhyan Studio web app (c) 2026 Mahan Srivastava. All rights reserved. Licensed to MORVIN INTEGRATED SOLUTIONS for its own store only; copying, reuse or redistribution is prohibited. */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'

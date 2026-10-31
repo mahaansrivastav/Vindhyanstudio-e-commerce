@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+// Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { apiBlob } from '../lib/api'

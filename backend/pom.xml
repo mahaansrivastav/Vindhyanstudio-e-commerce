@@ -12,14 +12,21 @@
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>backend</name>
-	<description>Vindhyan Studio e-commerce backend</description>
-	<url/>
+	<description>Vindhyan Studio e-commerce backend. (c) 2026 Mahan Srivastava. All rights reserved.</description>
 	<licenses>
-		<license/>
+		<license>
+			<name>Proprietary. All rights reserved. See LICENSE</name>
+			<distribution>manual</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<name>Mahan Srivastava</name>
+			<url>https://github.com/mahaansrivastav</url>
+			<roles><role>author</role><role>owner</role></roles>
+		</developer>
 	</developers>
+	<url/>
 	<scm>
 		<connection/>
 		<developerConnection/>

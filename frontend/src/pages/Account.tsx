@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+// Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
 import { useState } from 'react'
 import { Link, NavLink, Route, Routes } from 'react-router-dom'
 import { AddressForm } from '../components/AddressForm'

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mahan Srivastava. All rights reserved.
+// Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
 // Live preview of a personalised name keychain: raised letters on an outline base, like the real product.
 
 const COLOURS: Record<string, string> = {

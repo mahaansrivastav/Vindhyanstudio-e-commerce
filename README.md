@@ -1,5 +1,9 @@
 # Vindhyan Studio
 
+> **Ownership:** this software is written and owned by **Mahan Srivastava** ([github.com/mahaansrivastav](https://github.com/mahaansrivastav)).
+> It is licensed free of charge to MORVIN INTEGRATED SOLUTIONS (Vindhyan Studio) to run its own store only.
+> Copying, modifying, sharing it with other developers or reusing it elsewhere is not permitted without written permission. See [LICENSE](LICENSE).
+
 E-commerce site for custom 3D printed products. The flow it automates: **customer personalises and pays → invoice + Shiprocket order are created automatically → owner prints, packs, clicks "Packed", and hands the parcel to the courier.**
 
 | Part | Tech | Folder |

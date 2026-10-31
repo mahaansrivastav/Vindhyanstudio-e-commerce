@@ -8,3 +8,7 @@
   Client: Vindhyan Studio (Morvin Integrated Solutions)
   Built: 2026
   Stack: React, TypeScript, Vite, Tailwind CSS, Spring Boot, PostgreSQL, Supabase
+
+/* OWNERSHIP */
+  Software (c) 2026 Mahan Srivastava. All rights reserved.
+  Licensed to Morvin Integrated Solutions for vindhyanstudio.in only.
