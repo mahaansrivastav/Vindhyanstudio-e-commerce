@@ -3,10 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from
 import { api } from '../lib/api'
 import type { CategoryDto } from '../lib/types'
 import { useAuth, useCart, useConfig, useWishlist } from '../state/AppState'
-import { IconCart, IconHeart, IconSearch, IconTruck, IconUser } from './Icons'
-
-// Developer credit link. Change to the portfolio URL once it's live.
-const DEVELOPER_URL = 'https://github.com/mahaansrivastav'
+import { IconBox, IconCart, IconHeart, IconPencil, IconSearch, IconShield, IconTruck, IconUser } from './Icons'
 
 export function Layout() {
   const { profile } = useAuth()
@@ -84,27 +81,42 @@ export function Layout() {
         </a>
       )}
 
-      <footer className="mt-12 border-t border-line bg-surface">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <img src="/brand/logo-full.png" alt="Vindhyan Studio, your idea, our creation" className="h-24 w-auto" />
-            <p className="mt-2 text-muted">Your idea, our creation. Personalised 3D printed keychains, gifts, décor and more, printed to order and shipped across India.</p>
-            {config?.sellerPhone && <p className="mt-3 text-muted">WhatsApp / call: <a className="font-semibold text-ink hover:text-brand" href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noopener">{config.sellerPhone}</a></p>}
-          </div>
-          <FooterCol title="Shop" links={[['All products', '/shop'], ...cats.slice(0, 4).map((c) => [c.name, `/shop?category=${c.slug}`] as [string, string])]} />
-          <FooterCol title="Help" links={[['Track your order', '/account/orders'], ['Contact us', '/policies/contact'], ['Shipping policy', '/policies/shipping'], ['Returns & refunds', '/policies/refund']]} />
-          <FooterCol title="Legal" links={[['Privacy policy', '/policies/privacy'], ['Terms of service', '/policies/terms']]} />
+      <footer className="mt-16">
+        {/* Trust strip */}
+        <div className="border-y border-line bg-brand-soft">
+          <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-3 px-4 py-5 text-sm sm:grid-cols-4">
+            {[
+              [<IconPencil key="a" className="h-5 w-5" />, 'Made to order in India'],
+              [<IconTruck key="b" className="h-5 w-5" />, `Free shipping above ₹${config?.freeShippingAbove ?? 999}`],
+              [<IconBox key="c" className="h-5 w-5" />, 'Cash on delivery'],
+              [<IconShield key="d" className="h-5 w-5" />, 'Secure payments'],
+            ].map(([icon, text]) => (
+              <li key={text as string} className="flex items-center gap-2.5 font-semibold">
+                <span className="text-accent">{icon}</span>{text}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="border-t border-line">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-muted">
-            <span>
-              © {new Date().getFullYear()} Vindhyan Studio{config?.legalName ? <>, a brand of {config.legalName}</> : null}. All rights reserved.
-              {config?.gstin && <> · GSTIN {config.gstin}</>}
-              {config?.sellerAddress && <span className="block sm:inline"> · {config.sellerAddress}</span>}
-            </span>
-            <a href={DEVELOPER_URL} target="_blank" rel="noopener" className="hover:text-ink">
-              Powered by <b className="font-semibold text-ink underline decoration-brand/40 underline-offset-2">Mahaan Srivastav</b>
-            </a>
+
+        <div className="bg-[#1b1c20] text-stone-300">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
+            <div>
+              <img src="/brand/logo-light.png" alt="Vindhyan Studio, your idea, our creation" className="h-24 w-auto" />
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-stone-400">Personalised 3D printed keychains, idols, décor and gifts, printed to order and shipped across India.</p>
+              <div className="mt-5 space-y-1.5 text-sm">
+                {config?.sellerPhone && <a className="block hover:text-white" href={config.whatsapp ? `https://wa.me/${config.whatsapp}` : `tel:${config.sellerPhone}`} target="_blank" rel="noopener">WhatsApp · {config.sellerPhone}</a>}
+                {config?.sellerEmail && <a className="block hover:text-white" href={`mailto:${config.sellerEmail}`}>{config.sellerEmail}</a>}
+              </div>
+            </div>
+            <FooterCol title="Shop" links={[['All products', '/shop'], ...cats.slice(0, 5).map((c) => [c.name, `/shop?category=${c.slug}`] as [string, string])]} />
+            <FooterCol title="Help" links={[['Track your order', '/account/orders'], ['Contact us', '/policies/contact'], ['Shipping policy', '/policies/shipping'], ['Returns & refunds', '/policies/refund']]} />
+            <FooterCol title="Legal" links={[['Terms of use', '/policies/terms'], ['Privacy policy', '/policies/privacy'], ['Grievance officer', '/policies/contact']]} />
+          </div>
+          <div className="border-t border-white/10">
+            <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 pb-24 pt-5 text-xs text-stone-400 sm:flex-row sm:items-center sm:justify-between sm:pb-20">
+              <span>© {new Date().getFullYear()} Vindhyan Studio. All rights reserved.{config?.legalName && <> Powered by <span className="font-semibold text-stone-200">{config.legalName}</span>.</>}</span>
+              <span>{config?.gstin && <>GSTIN {config.gstin} · </>}Gorakhpur, Uttar Pradesh</span>
+            </div>
           </div>
         </div>
       </footer>
@@ -123,12 +135,24 @@ function HeaderLink({ to, label, icon, count, className = '' }: { to: string; la
 }
 
 function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
+  const list = (
+    <ul className="mt-3 space-y-2 text-sm text-stone-400">
+      {links.map(([label, to]) => <li key={label}><Link to={to} className="hover:text-white">{label}</Link></li>)}
+    </ul>
+  )
   return (
     <div>
-      <p className="font-bold">{title}</p>
-      <ul className="mt-3 space-y-2 text-muted">
-        {links.map(([label, to]) => <li key={to}><Link to={to} className="hover:text-brand">{label}</Link></li>)}
-      </ul>
+      {/* Mobile: tap to expand. Desktop: always open. */}
+      <details className="group border-b border-white/10 pb-3 lg:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold uppercase tracking-wider text-white">
+          {title}<span className="text-accent transition group-open:rotate-45">+</span>
+        </summary>
+        {list}
+      </details>
+      <div className="hidden lg:block">
+        <p className="text-sm font-bold uppercase tracking-wider text-white">{title}</p>
+        {list}
+      </div>
     </div>
   )
 }

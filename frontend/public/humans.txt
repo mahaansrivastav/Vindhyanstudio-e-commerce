@@ -1,0 +1,10 @@
+/* TEAM */
+  Design & development: Mahan Srivastava
+  Role: Full-stack developer (React, Spring Boot, PostgreSQL)
+  GitHub: https://github.com/mahaansrivastav
+  From: Gorakhpur, India
+
+/* SITE */
+  Client: Vindhyan Studio (Morvin Integrated Solutions)
+  Built: 2026
+  Stack: React, TypeScript, Vite, Tailwind CSS, Spring Boot, PostgreSQL, Supabase
