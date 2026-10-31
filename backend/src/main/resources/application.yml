@@ -21,6 +21,14 @@ spring:
       ddl-auto: validate   # Flyway owns the schema; this only checks entities match it
   flyway:
     enabled: true
+  mail:
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      # Fail fast instead of hanging a login request if the mail server can't be reached.
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
   servlet:
     multipart:
       max-file-size: 10MB

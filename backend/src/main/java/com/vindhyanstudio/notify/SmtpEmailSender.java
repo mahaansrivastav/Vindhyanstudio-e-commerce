@@ -36,6 +36,9 @@ public class SmtpEmailSender implements MessageSender {
         MimeMessage mime = mail.createMimeMessage();
         MimeMessageHelper h = new MimeMessageHelper(mime, "UTF-8");
         h.setFrom(props.notifications().fromEmail());
+        // Customers who hit "Reply" reach the shop's real inbox, not the sending address.
+        String replyTo = props.seller().email();
+        if (replyTo != null && replyTo.contains("@") && !replyTo.endsWith(".local")) h.setReplyTo(replyTo);
         h.setTo(m.to());
         h.setSubject(m.subject());
         h.setText(m.body(), false);
