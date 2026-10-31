@@ -29,3 +29,6 @@ backend/.env.production.local
 catalogue/catalogue.xlsx
 docs/catalogue-source/
 vindhyan-netlify-dist.zip
+
+# Local payment test keys
+backend/.env.razorpay.local

@@ -50,7 +50,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
           name: 'Vindhyan Studio',
           description: `Order ${init.orderNo}`,
           prefill: { name: init.name ?? '', email: init.email ?? '', contact: init.phone ?? '', ...(method ? { method } : {}) },
-          theme: { color: '#9a3412' },
+          theme: { color: '#26282e' },
           handler: (r: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
             resolve({ providerOrderId: r.razorpay_order_id, providerPaymentId: r.razorpay_payment_id, signature: r.razorpay_signature }),
           modal: { ondismiss: () => resolve(null) },
