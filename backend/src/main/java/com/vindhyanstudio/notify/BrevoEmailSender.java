@@ -28,10 +28,12 @@ public class BrevoEmailSender implements MessageSender {
     private final RestClient http;
     private final Map<String, String> sender;
     private final String replyTo;
+    private final boolean configured;
 
     public BrevoEmailSender(AppProperties props) {
-        String key = props.notifications().brevoApiKey();
-        if (key == null || key.isBlank()) throw new IllegalStateException("BREVO_API_KEY must be set when NOTIFY_EMAIL=brevo");
+        // A missing key must not stop the site from starting; sends fail (and the startup report warns) instead.
+        String key = props.notifications().brevoApiKey() == null ? "" : props.notifications().brevoApiKey();
+        this.configured = !key.isBlank();
         SimpleClientHttpRequestFactory timeouts = new SimpleClientHttpRequestFactory();
         timeouts.setConnectTimeout(Duration.ofSeconds(10));
         timeouts.setReadTimeout(Duration.ofSeconds(15));
@@ -52,6 +54,7 @@ public class BrevoEmailSender implements MessageSender {
 
     @Override
     public void send(Message m) {
+        if (!configured) throw new IllegalStateException("BREVO_API_KEY is not set");
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("sender", sender);
         body.put("to", List.of(Map.of("email", m.to())));

@@ -240,6 +240,7 @@ public class StartupReport {
         row(b, "From", p.notifications().fromEmail());
         row(b, "SMS / WhatsApp", "console".equals(p.notifications().sms()) ? "OFF (console)" : p.notifications().sms());
         row(b, "Owner WhatsApp link", set(p.seller().whatsapp()) ? "wa.me/" + p.seller().whatsapp() : "OFF");
+        if ("brevo".equals(p.notifications().email()) && !set(p.notifications().brevoApiKey())) warn.add("NOTIFY_EMAIL=brevo but BREVO_API_KEY is not set; emails will fail.");
         if ("smtp".equals(p.notifications().email()) && !set(env.getProperty("spring.mail.host"))) warn.add("NOTIFY_EMAIL=smtp but SPRING_MAIL_HOST is not set.");
         String st = p.storage().provider();
         row(b, "File storage", "supabase".equals(st)
