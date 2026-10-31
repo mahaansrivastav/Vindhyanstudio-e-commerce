@@ -36,8 +36,16 @@ public class CatalogueController {
                                 List<String> images, CustomisationSpec customisation, List<String> colours,
                                 List<String> sizes, int leadTimeDays, boolean returnable) {}
 
+    /** Browsers may reuse catalogue data for a minute (admin changes show up within ~60 s). */
+    private static final org.springframework.http.CacheControl CACHE =
+            org.springframework.http.CacheControl.maxAge(java.time.Duration.ofSeconds(60)).cachePublic();
+
     @GetMapping("/categories")
-    List<CategoryDto> categories() {
+    org.springframework.http.ResponseEntity<List<CategoryDto>> categories() {
+        return org.springframework.http.ResponseEntity.ok().cacheControl(CACHE).body(categoryList());
+    }
+
+    private List<CategoryDto> categoryList() {
         Map<Long, List<Product>> byCat = products.search(null, null).stream()
                 .collect(Collectors.groupingBy(p -> p.getCategory().getId()));
         return categories.findAllByOrderBySortOrderAsc().stream()
@@ -50,7 +58,12 @@ public class CatalogueController {
     }
 
     @GetMapping("/products")
-    List<ProductCard> products(@RequestParam(required = false) String category, @RequestParam(required = false) String q) {
+    org.springframework.http.ResponseEntity<List<ProductCard>> products(@RequestParam(required = false) String category,
+                                                                        @RequestParam(required = false) String q) {
+        return org.springframework.http.ResponseEntity.ok().cacheControl(CACHE).body(productList(category, q));
+    }
+
+    private List<ProductCard> productList(String category, String q) {
         String like = q == null || q.isBlank() ? null : "%" + q.trim().toLowerCase() + "%";
         String cat = category == null || category.isBlank() ? null : category;
         return products.search(cat, like).stream()
@@ -60,7 +73,11 @@ public class CatalogueController {
     }
 
     @GetMapping("/products/{slug}")
-    ProductDetail product(@PathVariable String slug) {
+    org.springframework.http.ResponseEntity<ProductDetail> product(@PathVariable String slug) {
+        return org.springframework.http.ResponseEntity.ok().cacheControl(CACHE).body(productDetail(slug));
+    }
+
+    private ProductDetail productDetail(String slug) {
         Product p = products.findBySlugAndActiveTrue(slug).orElseThrow(() -> ApiException.notFound("Product not found"));
         Category c = p.getCategory();
         return new ProductDetail(p.getSku(), p.getName(), p.getSlug(), c.getName(), c.getSlug(), p.getDescription(),

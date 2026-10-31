@@ -12,6 +12,11 @@ spring:
       fail-on-unknown-properties: false
   jpa:
     open-in-view: false
+    properties:
+      hibernate:
+        # Load related rows (images, categories) in batches instead of one query per product.
+        # Critical when the database is far away: ~120 round trips became a handful.
+        default_batch_fetch_size: 100
     hibernate:
       ddl-auto: validate   # Flyway owns the schema; this only checks entities match it
   flyway:

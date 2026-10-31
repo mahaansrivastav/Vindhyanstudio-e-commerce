@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DNS, Explained</title>
+<style>
+  :root {
+    --bg: #fbfaf8; --card: #ffffff; --ink: #1d1f24; --muted: #5f6570; --line: #e6e3dd;
+    --accent: #b9802b; --accent-soft: #f6efe2; --code: #f3f1ec; --ok: #1f7a43; --warn: #a15c0c;
+    --a: #2f6fd1; --b: #7a4fd6; --c: #1f8a6e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121317; --card: #1a1c21; --ink: #ecebe7; --muted: #a3a7b0; --line: #2c2f36;
+      --accent: #e0aa55; --accent-soft: #2a2418; --code: #23262c; --ok: #5cc98a; --warn: #f0a050;
+      --a: #6ea2f0; --b: #a88bf0; --c: #4fc4a4;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 -apple-system, "Segoe UI", Inter, Roboto, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 34px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 22px; margin: 44px 0 10px; letter-spacing: -0.01em; }
+  h3 { font-size: 17px; margin: 22px 0 6px; }
+  p { margin: 8px 0; }
+  .lead { color: var(--muted); font-size: 18px; }
+  .num { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 14px; font-weight: 700; align-items: center; justify-content: center; margin-right: 8px; vertical-align: 3px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 14px 0; }
+  .callout { background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 0; padding: 12px 16px; margin: 14px 0; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; }
+  code { background: var(--code); padding: 1px 6px; border-radius: 6px; }
+  pre { background: var(--code); padding: 12px 14px; border-radius: 10px; overflow-x: auto; margin: 10px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .scroll { overflow-x: auto; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--code); }
+  .flow { display: grid; gap: 8px; margin: 14px 0; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .step b { display: block; }
+  .step span { color: var(--muted); font-size: 15px; }
+  .layers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+  .layer { border-radius: 12px; padding: 12px; border: 1px solid var(--line); background: var(--card); }
+  .layer .t { font-weight: 700; }
+  .layer .s { color: var(--muted); font-size: 14px; }
+  .layer.a { border-top: 4px solid var(--a); } .layer.b { border-top: 4px solid var(--b); } .layer.c { border-top: 4px solid var(--c); }
+  .ok { color: var(--ok); font-weight: 700; } .warn { color: var(--warn); font-weight: 700; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  nav.toc { columns: 2; font-size: 15px; margin: 18px 0; }
+  nav.toc a { color: var(--ink); text-decoration: none; display: block; padding: 2px 0; }
+  nav.toc a:hover { color: var(--accent); }
+  svg text { font-family: inherit; }
+  @media (max-width: 640px) { .layers { grid-template-columns: 1fr; } nav.toc { columns: 1; } h1 { font-size: 28px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>DNS, explained</h1>
+  <p class="lead">A short, practical guide to how a domain name reaches a website, using the real setup of <b>vindhyanstudio.in</b> as the example.</p>
+
+  <nav class="toc">
+    <a href="#what">1. What DNS does</a>
+    <a href="#who">2. Who's who: registrar, DNS host, web host</a>
+    <a href="#lookup">3. What happens when you type a URL</a>
+    <a href="#records">4. Record types you'll actually use</a>
+    <a href="#ttl">5. TTL and "propagation"</a>
+    <a href="#ours">6. Our real configuration</a>
+    <a href="#https">7. How HTTPS certificates fit in</a>
+    <a href="#check">8. Checking DNS yourself</a>
+    <a href="#mistakes">9. Common mistakes</a>
+    <a href="#quiz">10. Quick self-check</a>
+  </nav>
+
+  <h2 id="what"><span class="num">1</span>What DNS does</h2>
+  <p>Computers find each other by <b>IP address</b> (like <code>75.2.60.5</code>). People remember <b>names</b> (like <code>vindhyanstudio.in</code>). The <b>Domain Name System (DNS)</b> is the internet's phone book: it turns names into addresses.</p>
+  <div class="callout">One sentence to remember: <b>DNS doesn't host your website. It only tells browsers where your website is.</b></div>
+
+  <h2 id="who"><span class="num">2</span>Who's who</h2>
+  <p>Three separate roles. Sometimes one company does several, but thinking of them separately avoids most confusion.</p>
+  <div class="layers">
+    <div class="layer a"><div class="t">Registrar</div><div class="s">Where you <b>bought</b> the name and renew it yearly. For us: <b>GoDaddy</b>.</div></div>
+    <div class="layer b"><div class="t">DNS host</div><div class="s">Where the <b>records</b> live (the phone-book entries). For us: also <b>GoDaddy</b> (nameservers <code>ns45/ns46.domaincontrol.com</code>).</div></div>
+    <div class="layer c"><div class="t">Web host</div><div class="s">Where the <b>website runs</b>. Frontend: <b>Netlify</b>. Backend API: <b>Render</b>.</div></div>
+  </div>
+  <p>The <b>NS (nameserver) records</b> decide which company is the DNS host. You could move the DNS host to Netlify by changing nameservers at GoDaddy. We chose to keep DNS at GoDaddy and only point two records at Netlify.</p>
+
+  <h2 id="lookup"><span class="num">3</span>What happens when you type a URL</h2>
+  <svg viewBox="0 0 820 170" width="100%" role="img" aria-label="DNS lookup flow: browser asks resolver, resolver asks root, .in servers, then GoDaddy nameservers, gets 75.2.60.5, browser connects to Netlify">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <g fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--muted)">
+      <rect x="6" y="55" width="110" height="56" rx="10"/><rect x="170" y="55" width="130" height="56" rx="10"/>
+      <rect x="360" y="8" width="130" height="40" rx="10"/><rect x="360" y="64" width="130" height="40" rx="10"/><rect x="360" y="120" width="130" height="40" rx="10"/>
+      <rect x="560" y="55" width="110" height="56" rx="10" style="stroke:var(--accent)"/>
+      <line x1="116" y1="83" x2="166" y2="83" marker-end="url(#ar)"/>
+      <line x1="300" y1="70" x2="356" y2="30" marker-end="url(#ar)"/><line x1="300" y1="83" x2="356" y2="84" marker-end="url(#ar)"/><line x1="300" y1="96" x2="356" y2="138" marker-end="url(#ar)"/>
+      <path d="M61 111 C 61 160, 615 160, 615 115" marker-end="url(#ar)" style="stroke:var(--accent)"/>
+    </g>
+    <g font-size="13" fill="var(--ink)" text-anchor="middle">
+      <text x="61" y="80">Your browser</text><text x="61" y="97" fill="var(--muted)" font-size="11">vindhyanstudio.in?</text>
+      <text x="235" y="80">Resolver</text><text x="235" y="97" fill="var(--muted)" font-size="11">ISP / 8.8.8.8 (caches)</text>
+      <text x="425" y="32">Root servers</text><text x="425" y="88">.in servers</text><text x="425" y="144">GoDaddy NS</text>
+      <text x="615" y="80">Netlify</text><text x="615" y="97" fill="var(--muted)" font-size="11">75.2.60.5</text>
+    </g>
+  </svg>
+  <div class="flow">
+    <div class="step"><span class="num">1</span><div><b>Browser asks a resolver</b><span>Usually your ISP's or Google's (8.8.8.8). If it already knows the answer (cached), it replies instantly.</span></div></div>
+    <div class="step"><span class="num">2</span><div><b>Resolver walks the tree</b><span>Root servers say "ask the .in servers"; the .in servers say "ask GoDaddy's nameservers (ns45/ns46.domaincontrol.com)".</span></div></div>
+    <div class="step"><span class="num">3</span><div><b>GoDaddy answers</b><span>"vindhyanstudio.in has an A record: 75.2.60.5". The resolver caches this for the TTL.</span></div></div>
+    <div class="step"><span class="num">4</span><div><b>Browser connects</b><span>It opens HTTPS to 75.2.60.5 (Netlify) and says "I want vindhyanstudio.in". Netlify serves your site.</span></div></div>
+  </div>
+
+  <h2 id="records"><span class="num">4</span>Record types you'll actually use</h2>
+  <div class="scroll"><table>
+    <tr><th>Type</th><th>Points a name to…</th><th>Example</th><th>Used for</th></tr>
+    <tr><td><span class="tag">A</span></td><td>An IPv4 address</td><td><code>@ → 75.2.60.5</code></td><td>Root domain → Netlify</td></tr>
+    <tr><td><span class="tag">AAAA</span></td><td>An IPv6 address</td><td><code>@ → 2600:…</code></td><td>Optional, same as A for IPv6</td></tr>
+    <tr><td><span class="tag">CNAME</span></td><td>Another <b>name</b> (an alias)</td><td><code>www → vindhyan-studio.netlify.app</code></td><td>Subdomains → a host's own name</td></tr>
+    <tr><td><span class="tag">MX</span></td><td>Mail servers</td><td><code>@ → mx.zoho.in</code></td><td>Receiving email at @vindhyanstudio.in</td></tr>
+    <tr><td><span class="tag">TXT</span></td><td>Free text</td><td><code>_dmarc → v=DMARC1; …</code></td><td>Email security (SPF, DKIM, DMARC), ownership checks</td></tr>
+    <tr><td><span class="tag">NS</span></td><td>The domain's DNS host</td><td><code>@ → ns45.domaincontrol.com</code></td><td>Who answers for the domain</td></tr>
+    <tr><td><span class="tag">SOA</span></td><td>Zone admin info</td><td>Primary nameserver, serial</td><td>Managed automatically; don't edit</td></tr>
+    <tr><td><span class="tag">CAA</span></td><td>Which CAs may issue certs</td><td><code>@ → letsencrypt.org</code></td><td>Optional security hardening</td></tr>
+  </table></div>
+  <h3>Name column cheat sheet</h3>
+  <p><code>@</code> = the domain itself (<code>vindhyanstudio.in</code>). <code>www</code> = <code>www.vindhyanstudio.in</code>. <code>api</code> = <code>api.vindhyanstudio.in</code>.</p>
+  <div class="callout"><b>Why A for the root but CNAME for www?</b> The DNS standard doesn't allow a CNAME at the root (<code>@</code>), because the root also needs NS and SOA records. So the root uses an <b>A record</b> with the host's IP, and subdomains use a <b>CNAME</b> to the host's name. A CNAME is nicer because if Netlify changes its IPs, the name still works.</div>
+
+  <h2 id="ttl"><span class="num">5</span>TTL and "propagation"</h2>
+  <p><b>TTL (time to live)</b> is how long resolvers may cache an answer, e.g. <code>600</code> seconds = 10 minutes, <code>3600</code> = 1 hour.</p>
+  <p>"Propagation" isn't data travelling. It's old cached answers <b>expiring</b> around the world. After you change a record, some people see the new value immediately and others only after their cached copy's TTL runs out.</p>
+  <div class="card"><b>Tip:</b> Before a planned change (e.g. moving the backend), lower the TTL to 300 a day earlier. The switch then takes effect within about 5 minutes.</div>
+
+  <h2 id="ours"><span class="num">6</span>Our real configuration</h2>
+  <svg viewBox="0 0 820 230" width="100%" role="img" aria-label="Architecture: vindhyanstudio.in and www go to Netlify frontend, api subdomain goes to Render backend, which uses Supabase">
+    <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <g fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--muted)">
+      <rect x="6" y="20" width="200" height="54" rx="10"/><rect x="6" y="88" width="200" height="54" rx="10"/><rect x="6" y="156" width="200" height="54" rx="10" stroke-dasharray="5 4"/>
+      <rect x="320" y="50" width="190" height="60" rx="10" style="stroke:var(--c)"/><rect x="320" y="150" width="190" height="60" rx="10" style="stroke:var(--b)"/>
+      <rect x="620" y="150" width="190" height="60" rx="10" style="stroke:var(--a)"/>
+      <line x1="206" y1="47" x2="316" y2="72" marker-end="url(#ar2)"/><line x1="206" y1="115" x2="316" y2="90" marker-end="url(#ar2)"/>
+      <line x1="206" y1="183" x2="316" y2="180" marker-end="url(#ar2)"/><line x1="415" y1="110" x2="415" y2="146" marker-end="url(#ar2)" stroke-dasharray="4 3"/>
+      <line x1="510" y1="180" x2="616" y2="180" marker-end="url(#ar2)"/>
+    </g>
+    <g font-size="13" fill="var(--ink)">
+      <text x="18" y="43">vindhyanstudio.in</text><text x="18" y="62" fill="var(--muted)" font-size="11">A @ → 75.2.60.5</text>
+      <text x="18" y="111">www.vindhyanstudio.in</text><text x="18" y="130" fill="var(--muted)" font-size="11">CNAME www → vindhyan-studio.netlify.app</text>
+      <text x="18" y="179">api.vindhyanstudio.in (optional)</text><text x="18" y="198" fill="var(--muted)" font-size="11">CNAME api → …onrender.com</text>
+      <text x="332" y="76">Netlify: frontend</text><text x="332" y="95" fill="var(--muted)" font-size="11">React build (HTML/JS/CSS)</text>
+      <text x="332" y="176">Render: backend API</text><text x="332" y="195" fill="var(--muted)" font-size="11">Spring Boot (Docker)</text>
+      <text x="632" y="176">Supabase</text><text x="632" y="195" fill="var(--muted)" font-size="11">Postgres + file storage</text>
+      <text x="425" y="133" fill="var(--muted)" font-size="11">browser calls API</text>
+    </g>
+  </svg>
+  <h3>Records at GoDaddy</h3>
+  <div class="scroll"><table>
+    <tr><th>Type</th><th>Name</th><th>Value</th><th>Why</th></tr>
+    <tr><td>A</td><td>@</td><td><code>75.2.60.5</code></td><td>Root domain → Netlify's load balancer</td></tr>
+    <tr><td>CNAME</td><td>www</td><td><code>vindhyan-studio.netlify.app</code></td><td>www → Netlify (it redirects to the root)</td></tr>
+    <tr><td>CNAME</td><td>api <i>(optional)</i></td><td><code>vindhyanstudio-e-commerce-backend.onrender.com</code></td><td>Stable API address; move hosts without rebuilding the site</td></tr>
+    <tr><td>NS / SOA</td><td>@</td><td>GoDaddy</td><td>Keep; GoDaddy stays the DNS host</td></tr>
+    <tr><td>TXT</td><td>_dmarc</td><td><code>v=DMARC1; …</code></td><td>Keep; email anti-spoofing policy</td></tr>
+    <tr><td>CNAME</td><td>_domainconnect</td><td>GoDaddy</td><td>Keep; GoDaddy's auto-setup helper</td></tr>
+  </table></div>
+  <h3>Settings that must match the domain (not DNS, but linked)</h3>
+  <ul>
+    <li><b>Netlify</b>: the domain is added under Domain management, and <code>vindhyanstudio.in</code> is the primary domain.</li>
+    <li><b>Render</b>: <code>APP_CORS_ORIGINS</code> lists the site's domains, so browsers allow the site to call the API.</li>
+    <li><b>Frontend build</b>: <code>VITE_API_BASE_URL</code> = the API's address (Render URL, or <code>https://api.vindhyanstudio.in</code>).</li>
+  </ul>
+
+  <h2 id="https"><span class="num">7</span>How HTTPS certificates fit in</h2>
+  <p>A certificate proves to the browser that the server really is <code>vindhyanstudio.in</code> (the padlock icon). Netlify gets one free from <b>Let's Encrypt</b>:</p>
+  <div class="flow">
+    <div class="step"><span class="num">1</span><div><b>DNS must point to Netlify first</b><span>That's what "Waiting on DNS propagation" means.</span></div></div>
+    <div class="step"><span class="num">2</span><div><b>Let's Encrypt checks control</b><span>It fetches a test file from your domain, and that only works if DNS reaches Netlify.</span></div></div>
+    <div class="step"><span class="num">3</span><div><b>Certificate issued and auto-renewed</b><span>Valid 90 days; Netlify renews it automatically. Nothing to buy.</span></div></div>
+  </div>
+  <p>Render does the same for <code>api.vindhyanstudio.in</code> once you add it as a custom domain there.</p>
+
+  <h2 id="check"><span class="num">8</span>Checking DNS yourself</h2>
+  <p>In a terminal (macOS / Linux):</p>
+<pre>dig +short vindhyanstudio.in           # → 75.2.60.5
+dig +short www.vindhyanstudio.in       # → vindhyan-studio.netlify.app. + IPs
+dig +short NS vindhyanstudio.in        # → ns45/ns46.domaincontrol.com.
+dig @8.8.8.8 +short vindhyanstudio.in  # ask Google's resolver directly
+curl -I https://vindhyanstudio.in      # does the site answer over HTTPS?</pre>
+  <p>On Windows: <code>nslookup vindhyanstudio.in</code>. Online: <b>dnschecker.org</b> shows what resolvers around the world currently see.</p>
+
+  <h2 id="mistakes"><span class="num">9</span>Common mistakes</h2>
+  <details><summary>Two A records on <code>@</code> (old "Parked" plus new)</summary><p>Visitors randomly hit the parking page, and the certificate can fail. Keep exactly one: <code>75.2.60.5</code>.</p></details>
+  <details><summary>Domain forwarding left on at GoDaddy</summary><p>Forwarding overrides your records. Turn it off when the domain points to a host.</p></details>
+  <details><summary>Typing <code>https://</code> or a trailing slash in a DNS value</summary><p>DNS values are bare names or IPs: <code>vindhyan-studio.netlify.app</code>, not <code>https://vindhyan-studio.netlify.app/</code>.</p></details>
+  <details><summary>Changing nameservers by accident</summary><p>If NS records change, <i>all</i> other records at GoDaddy stop mattering, because a different company now answers. Only change NS deliberately.</p></details>
+  <details><summary>Deleting email records (MX / TXT / DMARC)</summary><p>Your website keeps working, but email delivery breaks or lands in spam. Only edit the records you mean to change.</p></details>
+  <details><summary>Site loads but products don't (CORS error)</summary><p>DNS is fine. The backend doesn't trust the new domain yet. Add it to <code>APP_CORS_ORIGINS</code> on Render.</p></details>
+  <details><summary>Panicking during propagation</summary><p>Mixed results for up to the TTL (sometimes a few hours) are normal. Check with <code>dig @8.8.8.8</code> or dnschecker.org.</p></details>
+
+  <h2 id="quiz"><span class="num">10</span>Quick self-check</h2>
+  <details><summary>Where do I renew the domain every year?</summary><p>At the registrar: <b>GoDaddy</b>.</p></details>
+  <details><summary>I want <code>shop.vindhyanstudio.in</code> to show the same site. Which record?</summary><p>A <b>CNAME</b>: name <code>shop</code>, value <code>vindhyan-studio.netlify.app</code>. Then add it as a domain alias in Netlify.</p></details>
+  <details><summary>The backend moves from Render to another host. What changes?</summary><p>With <code>api.vindhyanstudio.in</code> in use: update only that <b>CNAME</b> at GoDaddy (and the new host's custom domain). The frontend doesn't change.</p></details>
+  <details><summary>Why can't I use a CNAME for <code>@</code>?</summary><p>The root must also hold NS/SOA records, and a CNAME can't coexist with other records. So the root uses an A record.</p></details>
+  <details><summary>I changed a record 5 minutes ago and still see the old site. Broken?</summary><p>Probably not. Your resolver is still using the cached answer until its TTL expires.</p></details>
+
+  <p style="margin-top:40px;color:var(--muted);font-size:14px">Vindhyan Studio · DNS study notes · values reflect the configuration as of October 2026.</p>
+</main>
+</body>
+</html>
