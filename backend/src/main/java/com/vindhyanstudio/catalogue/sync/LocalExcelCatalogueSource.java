@@ -41,7 +41,14 @@ public class LocalExcelCatalogueSource implements CatalogueSource {
     public Snapshot read() throws Exception {
         Path file = workbookPath();
         if (!Files.exists(file)) throw new IllegalStateException("Catalogue file not found: " + file);
-        try (InputStream in = Files.newInputStream(file); Workbook wb = WorkbookFactory.create(in)) {
+        try (InputStream in = Files.newInputStream(file)) {
+            return parse(in);
+        }
+    }
+
+    /** Reads a workbook: the "products" sheet (or the first sheet) and an optional "categories" sheet. */
+    public static Snapshot parse(InputStream in) throws Exception {
+        try (Workbook wb = WorkbookFactory.create(in)) {
             Sheet products = Optional.ofNullable(wb.getSheet("products")).orElse(wb.getSheetAt(0));
             Sheet categories = wb.getSheet("categories");
             FormulaEvaluator ev = wb.getCreationHelper().createFormulaEvaluator();

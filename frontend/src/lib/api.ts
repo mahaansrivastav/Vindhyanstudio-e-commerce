@@ -85,3 +85,15 @@ export async function openBlob(path: string) {
     throw e
   }
 }
+
+/** Downloads an authenticated file (Excel reports) with the given name. */
+export async function downloadFile(path: string, fileName: string) {
+  const url = URL.createObjectURL(await apiBlob(path))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
+}

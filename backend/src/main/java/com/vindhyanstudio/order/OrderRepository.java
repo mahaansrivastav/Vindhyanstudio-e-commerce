@@ -21,4 +21,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCreatedAtAfter(OffsetDateTime after);
 
     long countByStatus(OrderStatus status);
+
+    List<Order> findByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtAsc(OffsetDateTime from, OffsetDateTime to);
 }

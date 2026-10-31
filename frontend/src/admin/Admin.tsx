@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Link, NavLink, Route, Routes, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, NavLink, Route, Routes, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorBox, PrivateImage, ProductImage, Spinner, StatusBadge } from '../components/ui'
 import { api, openBlob } from '../lib/api'
 import { dateTime, describeCustomisation, rupees, STATUS_LABEL } from '../lib/format'
-import type { OrderStatus, OrderSummary, OrderView, SyncRun } from '../lib/types'
+import type { OrderStatus, OrderSummary, OrderView } from '../lib/types'
 import { useAsync } from '../lib/useAsync'
+import { Dashboard } from './Dashboard'
+import { Import } from './Import'
 import { Categories, ProductEditor, ProductList } from './Products'
 
 const ACTION_LABEL: Partial<Record<OrderStatus, string>> = {
@@ -17,25 +19,28 @@ const ACTION_LABEL: Partial<Record<OrderStatus, string>> = {
 }
 
 export function Admin() {
-  const tab = 'rounded-lg px-3 py-2 text-sm font-semibold'
+  const tab = ({ isActive }: { isActive: boolean }) => `shrink-0 rounded-lg px-3 py-2 text-sm ${isActive ? 'bg-ink font-medium text-white' : 'text-ink/70 hover:bg-surface hover:text-ink'}`
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-semibold">Studio admin</h1>
-        <nav className="ml-auto flex gap-1">
-          <NavLink to="/admin" end className={({ isActive }) => `${tab} ${isActive ? 'bg-ink text-white' : 'text-muted'}`}>Orders</NavLink>
-          <NavLink to="/admin/products" className={({ isActive }) => `${tab} ${isActive ? 'bg-ink text-white' : 'text-muted'}`}>Products</NavLink>
-          <NavLink to="/admin/catalogue" className={({ isActive }) => `${tab} ${isActive ? 'bg-ink text-white' : 'text-muted'}`}>Excel sync</NavLink>
+      <div className="flex flex-wrap items-center gap-3 border-b border-line pb-4">
+        <h1 className="text-2xl">Studio admin</h1>
+        <nav className="scrollbar-none -mx-4 flex w-full gap-1 overflow-x-auto px-4 sm:mx-0 sm:ml-auto sm:w-auto sm:px-0">
+          <NavLink to="/admin" end className={tab}>Dashboard</NavLink>
+          <NavLink to="/admin/orders" className={tab}>Orders</NavLink>
+          <NavLink to="/admin/products" className={tab}>Products and stock</NavLink>
+          <NavLink to="/admin/import" className={tab}>Update from Excel</NavLink>
         </nav>
       </div>
       <Routes>
-        <Route index element={<Orders />} />
+        <Route index element={<Dashboard />} />
+        <Route path="orders" element={<Orders />} />
         <Route path="orders/:id" element={<AdminOrder />} />
         <Route path="products" element={<ProductList />} />
         <Route path="products/new" element={<ProductEditor />} />
         <Route path="products/:sku" element={<ProductEditor />} />
         <Route path="categories" element={<Categories />} />
-        <Route path="catalogue" element={<Catalogue />} />
+        <Route path="import" element={<Import />} />
+        <Route path="catalogue" element={<Navigate to="/admin/import" replace />} />
       </Routes>
     </div>
   )
@@ -72,7 +77,7 @@ function Orders() {
       {orders.data && (
         <div className="card overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
+            <thead className="border-b border-line bg-surface text-xs text-muted">
               <tr><th className="p-3">Order</th><th className="p-3">Customer</th><th className="p-3">Items</th><th className="p-3">Total</th><th className="p-3">Status</th></tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -96,8 +101,8 @@ function Orders() {
 
 function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
   return (
-    <div className={`card p-4 ${highlight ? 'border-brand bg-brand-soft' : ''}`}>
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
+    <div className={`card p-4 ${highlight ? 'border-ink/20 bg-surface' : ''}`}>
+      <p className="text-sm text-muted">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   )
@@ -113,7 +118,7 @@ function AdminOrder() {
   if (error || !o) return <ErrorBox message={error ?? 'Not found'} onRetry={reload} />
 
   const act = async (status: OrderStatus) => {
-    if (status === 'CANCELLED' && !confirm('Cancel this order? Refund any online payment from the Razorpay dashboard.')) return
+    if (status === 'CANCELLED' && !confirm('Cancel this order? If the customer paid online, the money is refunded automatically.')) return
     setErr(null)
     setBusy(true)
     try { setData(await api<OrderView>(`/api/admin/orders/${o.id}/status`, { body: { status } })) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
@@ -127,7 +132,7 @@ function AdminOrder() {
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Link to="/admin" className="text-sm text-muted">← Orders</Link>
+          <Link to="/admin/orders" className="text-sm text-muted">← Orders</Link>
           <h2 className="text-2xl font-semibold">{o.orderNo}</h2>
           <StatusBadge status={o.status} />
         </div>
@@ -194,52 +199,6 @@ function AdminOrder() {
           {o.invoiceNo ? <button className="btn-outline w-full" onClick={() => openBlob(`/api/orders/${o.id}/invoice`).catch((e) => alert(e.message))}>Open {o.invoiceNo}</button> : <p className="text-muted">Not generated yet.</p>}
         </section>
       </aside>
-    </div>
-  )
-}
-
-function Catalogue() {
-  const runs = useAsync(() => api<SyncRun[]>('/api/admin/catalogue/sync-runs'), [])
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-  const last = runs.data?.[0]
-
-  const sync = async () => {
-    setBusy(true)
-    setErr(null)
-    try { await api('/api/admin/catalogue/sync', { method: 'POST' }); runs.reload() } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
-  }
-
-  return (
-    <div className="max-w-4xl space-y-4">
-      <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
-        <div className="text-sm">
-          <p className="font-semibold">Products come from the Excel sheet and photos folder.</p>
-          <p className="text-muted">Edit <code>catalogue.xlsx</code> or add <code>photos/&lt;SKU_id&gt;/</code>, then sync. It also syncs automatically every 10 minutes.</p>
-        </div>
-        <button className="btn-primary" onClick={sync} disabled={busy}>{busy ? 'Syncing…' : 'Sync now'}</button>
-      </div>
-      {err && <ErrorBox message={err} />}
-      {runs.loading && <Spinner />}
-      {last && (
-        <div className="card p-5">
-          <p className="text-sm">Last sync {dateTime(last.startedAt)}: <b className="text-ok">{last.rowsOk} live</b>, <b className={last.rowsFailed ? 'text-bad' : ''}>{last.rowsFailed} skipped</b></p>
-          {last.issues.length > 0 ? (
-            <table className="mt-4 w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-muted"><tr><th className="py-2">Row</th><th>SKU</th><th>Problem</th></tr></thead>
-              <tbody className="divide-y divide-line">
-                {last.issues.map((i, n) => (
-                  <tr key={n}>
-                    <td className="py-2 pr-3">{i.row || '—'}</td>
-                    <td className="pr-3 font-mono">{i.sku ?? '—'}</td>
-                    <td className={i.severity === 'ERROR' ? 'text-bad' : 'text-warn'}>{i.severity === 'WARN' ? '⚠ ' : ''}{i.message}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : <p className="mt-2 text-sm text-ok">No problems found.</p>}
-        </div>
-      )}
     </div>
   )
 }

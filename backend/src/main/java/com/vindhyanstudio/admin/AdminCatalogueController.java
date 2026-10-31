@@ -32,8 +32,11 @@ public class AdminCatalogueController {
     private final ProductRepository products;
     private final CategoryRepository categories;
     private final StorageService storage;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
-    public AdminCatalogueController(ProductRepository products, CategoryRepository categories, StorageService storage) {
+    public AdminCatalogueController(ProductRepository products, CategoryRepository categories, StorageService storage,
+                                    org.springframework.jdbc.core.JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
         this.products = products;
         this.categories = categories;
         this.storage = storage;
@@ -111,9 +114,44 @@ public class AdminCatalogueController {
     @Transactional
     public ProductDto update(@PathVariable String sku, @Valid @RequestBody ProductForm f) {
         Product p = find(sku);
-        requireAdminOwned(p);
+        claim(p);
         apply(p, f, category(f.categoryId()));
         return dto(p);
+    }
+
+    public record QuickEdit(@Min(0) Integer stock, @DecimalMin("1") BigDecimal sellingPrice, @DecimalMin("1") BigDecimal mrp, Boolean active) {}
+
+    /** Inline edits from the stock table: only the fields that are sent change. */
+    @PatchMapping("/products/{sku}")
+    @Transactional
+    public ProductDto quickEdit(@PathVariable String sku, @Valid @RequestBody QuickEdit f) {
+        Product p = find(sku);
+        claim(p);
+        BigDecimal mrp = f.mrp() != null ? f.mrp().setScale(2, RoundingMode.HALF_UP) : p.getMrp();
+        BigDecimal price = f.sellingPrice() != null ? f.sellingPrice().setScale(2, RoundingMode.HALF_UP) : p.getSellingPrice();
+        if (price.compareTo(mrp) > 0) throw ApiException.badRequest("Selling price can't be higher than MRP");
+        p.setMrp(mrp);
+        p.setSellingPrice(price);
+        p.setOfferPct(mrp.subtract(price).multiply(BigDecimal.valueOf(100)).divide(mrp, 0, RoundingMode.HALF_UP).intValue());
+        if (f.stock() != null) p.setStock(Math.min(f.stock(), CatalogueSyncService.MADE_TO_ORDER_STOCK));
+        if (f.active() != null) {
+            if (f.active() && p.getImages().isEmpty()) throw ApiException.badRequest("Add at least one photo before showing this product on the website");
+            p.setActive(f.active());
+        }
+        return dto(p);
+    }
+
+    /** Deleting is only for products nobody has ordered; otherwise hide them (order history keeps working either way). */
+    @DeleteMapping("/products/{sku}")
+    @Transactional
+    public void delete(@PathVariable String sku) {
+        Product p = find(sku);
+        Long ordered = jdbc.queryForObject("select count(*) from order_items where sku = ?", Long.class, sku);
+        if (ordered != null && ordered > 0) {
+            throw new ApiException(HttpStatus.CONFLICT, "This product has orders, so it can't be deleted. Turn off \"Show on website\" to hide it instead.");
+        }
+        p.getImages().forEach(i -> storage.delete(i.getStorageKey()));
+        products.delete(p);
     }
 
     /** Personalisation can be set for any product, including Excel ones (it isn't a sheet column). */
@@ -144,7 +182,7 @@ public class AdminCatalogueController {
     @Transactional
     public ProductDto addImages(@PathVariable String sku, @RequestParam("files") List<MultipartFile> files) throws IOException {
         Product p = find(sku);
-        requireAdminOwned(p);
+        claim(p);
         if (p.getImages().size() + files.size() > 10) throw ApiException.badRequest("A product can have at most 10 photos");
         int order = p.getImages().stream().mapToInt(ProductImage::getSortOrder).max().orElse(-1) + 1;
         for (MultipartFile file : files) {
@@ -164,11 +202,12 @@ public class AdminCatalogueController {
     @Transactional
     public ProductDto deleteImage(@PathVariable String sku, @PathVariable Long imageId) {
         Product p = find(sku);
-        requireAdminOwned(p);
+        claim(p);
         ProductImage img = p.getImages().stream().filter(i -> i.getId().equals(imageId)).findFirst()
                 .orElseThrow(() -> ApiException.notFound("Photo not found"));
         p.getImages().remove(img);
         storage.delete(img.getStorageKey());
+        if (p.getImages().isEmpty()) p.setActive(false); // never show a product without a photo
         return dto(p);
     }
 
@@ -177,7 +216,7 @@ public class AdminCatalogueController {
     @Transactional
     public ProductDto reorder(@PathVariable String sku, @RequestBody List<Long> ids) {
         Product p = find(sku);
-        requireAdminOwned(p);
+        claim(p);
         for (ProductImage img : p.getImages()) {
             int idx = ids.indexOf(img.getId());
             img.setSortOrder(idx < 0 ? ids.size() + img.getSortOrder() : idx);
@@ -265,10 +304,9 @@ public class AdminCatalogueController {
         }
     }
 
-    private void requireAdminOwned(Product p) {
-        if (!"ADMIN".equals(p.getSource())) {
-            throw new ApiException(HttpStatus.CONFLICT, "This product comes from the Excel sheet. Click \"Manage here instead\" first, or edit it in the sheet.");
-        }
+    /** Any edit in admin makes the product admin-managed, so the developer's folder sync never overwrites it. */
+    private static void claim(Product p) {
+        p.setSource("ADMIN");
     }
 
     private Product find(String sku) {

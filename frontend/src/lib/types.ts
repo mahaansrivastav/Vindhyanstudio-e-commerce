@@ -82,7 +82,7 @@ export interface PaymentInit {
 
 export interface SyncRun {
   id: number; startedAt: string; finishedAt: string; rowsOk: number; rowsFailed: number
-  issues: { severity: 'ERROR' | 'WARN'; row: number; sku: string | null; message: string }[]
+  issues: { severity: 'ERROR' | 'WARN' | 'INFO'; row: number; sku: string | null; message: string }[]
 }
 
 export interface AdminProduct {
@@ -96,4 +96,33 @@ export interface AdminCategory {
   id: number; name: string; slug: string; hsnCode: string | null; gstRate: number; weightG: number
   lengthCm: number; widthCm: number; heightCm: number; leadTimeDays: number
   customisation: string | null; colours: string | null; sizes: string | null; returnable: boolean; productCount: number
+}
+
+export interface Kpis {
+  revenue: number; orders: number; avgOrderValue: number; itemsSold: number; customers: number; newCustomers: number
+  cancelled: number; returned: number; awaitingPayment: number; codOrders: number; codRevenue: number; onlineOrders: number; onlineRevenue: number
+}
+
+export interface Dashboard {
+  from: string; to: string; granularity: 'day' | 'month'; kpis: Kpis; previous: Kpis
+  series: { label: string; date: string; orders: number; revenue: number }[]
+  topProducts: { sku: string; name: string; category: string; image: string | null; qty: number; revenue: number }[]
+  categories: { name: string; orders: number; qty: number; revenue: number }[]
+  states: { name: string; orders: number; qty: number; revenue: number }[]
+  attention: {
+    toPrint: number; readyToShip: number; awaitingPayment: number
+    lowStock: { sku: string; name: string; image: string | null; stock: number }[]
+    outOfStock: { sku: string; name: string; image: string | null; stock: number }[]
+    liveProducts: number; hiddenProducts: number; noPhoto: number; madeToOrder: number
+  }
+}
+
+export interface ImportRow {
+  row: number; sku: string; name: string; image: string | null; status: 'NEW' | 'UPDATE' | 'SAME' | 'ERROR'
+  changes: { field: string; label: string; from: string | null; to: string | null }[]
+  errors: string[]; warnings: string[]
+}
+
+export interface ImportPreview {
+  newCount: number; updateCount: number; sameCount: number; errorCount: number; newCategories: string[]; rows: ImportRow[]
 }

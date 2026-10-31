@@ -33,7 +33,7 @@ public class SyncRun {
         return l == null ? List.of() : l;
     }
 
-    void finish(int ok, int failed, List<Issue> issues) {
+    public void finish(int ok, int failed, List<Issue> issues) {
         this.finishedAt = OffsetDateTime.now();
         this.rowsOk = ok;
         this.rowsFailed = failed;

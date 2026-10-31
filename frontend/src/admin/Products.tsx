@@ -1,52 +1,156 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, ErrorBox, ProductImage, Spinner } from '../components/ui'
 import { api } from '../lib/api'
-import { rupees } from '../lib/format'
 import type { AdminCategory, AdminProduct } from '../lib/types'
 import { useAsync } from '../lib/useAsync'
 
-// ---------------- Product list ----------------
+// ---------------- Product list (stock table) ----------------
+
+const MADE_TO_ORDER = 999
+type ListFilter = 'all' | 'live' | 'hidden' | 'low' | 'nophoto'
+const LIST_FILTERS: [ListFilter, string][] = [['all', 'All'], ['live', 'On website'], ['hidden', 'Hidden'], ['low', 'Low or out of stock'], ['nophoto', 'No photo']]
 
 export function ProductList() {
+  const [params, setParams] = useSearchParams()
+  const filter = (params.get('filter') ?? 'all') as ListFilter
   const [q, setQ] = useState('')
-  const [query, setQuery] = useState('')
-  const { data, error, loading, reload } = useAsync(() => api<AdminProduct[]>(`/api/admin/products?q=${encodeURIComponent(query)}`), [query])
+  const [cat, setCat] = useState('')
+  const { data, error, loading, reload, setData } = useAsync(() => api<AdminProduct[]>('/api/admin/products'), [])
+
+  const rows = (data ?? []).filter((p) => {
+    const needle = q.trim().toLowerCase()
+    if (needle && !p.name.toLowerCase().includes(needle) && !p.sku.toLowerCase().includes(needle)) return false
+    if (cat && p.category !== cat) return false
+    if (filter === 'live') return p.active
+    if (filter === 'hidden') return !p.active
+    if (filter === 'low') return p.stock < MADE_TO_ORDER && p.stock <= 3
+    if (filter === 'nophoto') return p.images.length === 0
+    return true
+  })
+  const cats = [...new Set((data ?? []).map((p) => p.category))].sort()
+  const replace = (next: AdminProduct) => setData((data ?? []).map((p) => (p.sku === next.sku ? next : p)))
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <form onSubmit={(e) => { e.preventDefault(); setQuery(q) }} className="flex-1">
-          <input className="input max-w-sm" placeholder="Search by name or SKU" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search products" />
-        </form>
-        <Link to="/admin/categories" className="btn-outline">Categories</Link>
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="mr-auto text-2xl">Products and stock</h2>
+        <Link to="/admin/categories" className="btn-ghost">Categories</Link>
+        <Link to="/admin/import" className="btn-outline">Update from Excel</Link>
         <Link to="/admin/products/new" className="btn-primary">+ Add product</Link>
       </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <input className="input max-w-xs" placeholder="Search by name or SKU" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search products" />
+        <select className="input w-auto" value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Category">
+          <option value="">All categories</option>
+          {cats.map((c) => <option key={c}>{c}</option>)}
+        </select>
+      </div>
+      <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4">
+        {LIST_FILTERS.map(([f, label]) => (
+          <button key={f} onClick={() => setParams(f === 'all' ? {} : { filter: f })} className={`chip shrink-0 ${filter === f ? 'chip-on' : ''}`}>{label}</button>
+        ))}
+      </div>
+
       {loading && !data && <Spinner />}
       {error && <ErrorBox message={error} onRetry={reload} />}
       {data?.length === 0 && <Empty title="No products yet"><Link to="/admin/products/new" className="btn-primary mt-2">Add your first product</Link></Empty>}
       {data && data.length > 0 && (
-        <div className="card divide-y divide-line">
-          {data.map((p) => (
-            <Link key={p.sku} to={`/admin/products/${p.sku}`} className={`flex items-center gap-4 p-3 hover:bg-stone-50 ${p.active ? '' : 'opacity-60'}`}>
-              <ProductImage src={p.images[0]?.url ?? null} alt={p.name} className="h-14 w-14 shrink-0 rounded-lg" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{p.name}</p>
-                <p className="text-xs text-muted">{p.sku} · {p.category} · {p.images.length} photo{p.images.length === 1 ? '' : 's'}</p>
-              </div>
-              <div className="hidden text-right text-sm sm:block">
-                <p className="font-semibold">{rupees(p.sellingPrice)}</p>
-                <p className={`text-xs ${p.stock <= 0 ? 'text-bad' : p.stock <= 3 ? 'text-warn' : 'text-muted'}`}>{p.stock} in stock</p>
-              </div>
-              <div className="flex w-24 shrink-0 flex-col items-end gap-1">
-                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.active ? 'bg-green-50 text-green-800' : 'bg-stone-100 text-stone-600'}`}>{p.active ? 'Live' : 'Hidden'}</span>
-                <span className="text-[11px] text-muted">{p.source === 'EXCEL' ? 'from Excel' : 'managed here'}</span>
-              </div>
-            </Link>
-          ))}
+        <div className="overflow-x-auto rounded-xl border border-line">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead className="border-b border-line bg-surface text-left text-xs text-muted">
+              <tr>
+                <th className="px-4 py-2.5 font-medium">Product</th>
+                <th className="px-3 py-2.5 font-medium">Price (₹)</th>
+                <th className="px-3 py-2.5 font-medium">MRP (₹)</th>
+                <th className="px-3 py-2.5 font-medium">Stock</th>
+                <th className="px-3 py-2.5 font-medium">On website</th>
+                <th className="px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {rows.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted">No products match.</td></tr>}
+              {rows.map((p) => <StockRow key={p.sku} p={p} onSaved={replace} />)}
+            </tbody>
+          </table>
         </div>
       )}
+      {data && <p className="text-xs text-muted">Showing {rows.length} of {data.length}. Changes in this table go live as soon as you click Save.</p>}
     </div>
+  )
+}
+
+function StockRow({ p, onSaved }: { p: AdminProduct; onSaved: (p: AdminProduct) => void }) {
+  const mto = p.stock >= MADE_TO_ORDER
+  const [price, setPrice] = useState(String(p.sellingPrice))
+  const [mrp, setMrp] = useState(String(p.mrp))
+  const [stock, setStock] = useState(mto ? '' : String(p.stock))
+  const [madeToOrder, setMadeToOrder] = useState(mto)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  const dirty = Number(price) !== p.sellingPrice || Number(mrp) !== p.mrp || madeToOrder !== mto || (!madeToOrder && Number(stock) !== p.stock)
+
+  const save = async (body: Record<string, unknown>) => {
+    setBusy(true); setErr(null); setSaved(false)
+    try {
+      const next = await api<AdminProduct>(`/api/admin/products/${p.sku}`, { method: 'PATCH', body })
+      onSaved(next)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+  }
+  const saveRow = () => {
+    if (!madeToOrder && (stock === '' || Number(stock) < 0)) return setErr('Enter stock (0 or more)')
+    save({ sellingPrice: Number(price), mrp: Number(mrp), stock: madeToOrder ? MADE_TO_ORDER : Number(stock) })
+  }
+  const low = !madeToOrder && Number(stock) <= 3
+
+  return (
+    <tr className={p.active ? '' : 'bg-surface/50'}>
+      <td className="px-4 py-2.5">
+        <Link to={`/admin/products/${p.sku}`} className="flex items-center gap-3">
+          <ProductImage src={p.images[0]?.url ?? null} alt="" className="h-11 w-11 shrink-0 rounded-lg" />
+          <span className="min-w-0">
+            <span className="block max-w-[260px] truncate font-medium hover:underline">{p.name}</span>
+            <span className="text-xs text-muted">{p.sku} · {p.category}</span>
+          </span>
+        </Link>
+      </td>
+      <td className="px-3 py-2.5"><input className="input w-24 py-1.5" type="number" min={1} value={price} onChange={(e) => setPrice(e.target.value)} aria-label="Selling price" /></td>
+      <td className="px-3 py-2.5"><input className="input w-24 py-1.5" type="number" min={1} value={mrp} onChange={(e) => setMrp(e.target.value)} aria-label="MRP" /></td>
+      <td className="px-3 py-2.5">
+        <div className="flex items-center gap-3">
+          {!madeToOrder && <input className={`input w-20 py-1.5 ${low ? 'border-amber-400' : ''}`} type="number" min={0} value={stock} onChange={(e) => setStock(e.target.value)} aria-label="Stock" />}
+          <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted" title="Printed after the order comes in, so it never runs out">
+            <input type="checkbox" className="accent-black" checked={madeToOrder} onChange={(e) => { setMadeToOrder(e.target.checked); if (!e.target.checked && stock === '') setStock('10') }} />
+            Made to order
+          </label>
+        </div>
+      </td>
+      <td className="px-3 py-2.5">
+        <Switch on={p.active} disabled={busy} onChange={(v) => save({ active: v })} label={p.active ? 'Shown' : 'Hidden'} />
+      </td>
+      <td className="px-4 py-2.5 text-right">
+        {dirty
+          ? <button className="btn-primary px-3 py-1.5 text-xs" onClick={saveRow} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+          : saved ? <span className="text-xs text-ok">Saved</span> : <Link to={`/admin/products/${p.sku}`} className="text-xs text-muted hover:text-ink">Edit ›</Link>}
+        {err && <p className="mt-1 max-w-[180px] text-left text-xs text-bad">{err}</p>}
+      </td>
+    </tr>
+  )
+}
+
+function Switch({ on, onChange, disabled, label }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} disabled={disabled} onClick={() => onChange(!on)} className="flex items-center gap-2 text-xs text-muted disabled:opacity-50">
+      <span className={`relative h-5 w-9 rounded-full transition ${on ? 'bg-ink' : 'bg-line'}`}>
+        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${on ? 'left-[18px]' : 'left-0.5'}`} />
+      </span>
+      {label}
+    </button>
   )
 }
 
@@ -80,7 +184,7 @@ export function ProductEditor() {
   if (loadErr) return <ErrorBox message={loadErr} />
   if (!isNew && !product) return <Spinner />
 
-  const locked = product?.source === 'EXCEL'
+  const locked = false
   const set = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [k]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value })
     setMsg(null)
@@ -112,9 +216,14 @@ export function ProductEditor() {
     }
   }
 
-  const takeOver = async () => {
-    setProduct(await api<AdminProduct>(`/api/admin/products/${product!.sku}/take-over`, { method: 'POST' }))
-    setMsg('This product is now managed here. The Excel row for it will be ignored.')
+  const remove = async () => {
+    if (!product) return
+    if (!confirm(`Delete "${product.name}" permanently? To keep it but hide it from customers, turn off "Show on website" instead.`)) return
+    setErr(null)
+    try {
+      await api(`/api/admin/products/${product.sku}`, { method: 'DELETE' })
+      nav('/admin/products', { replace: true })
+    } catch (e) { setErr((e as Error).message) }
   }
 
   return (
@@ -125,13 +234,6 @@ export function ProductEditor() {
           <h2 className="text-2xl font-semibold">{isNew ? 'Add product' : product!.name}</h2>
           {product && product.active && <a href={`/p/${product.slug}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-brand">View on site ↗</a>}
         </div>
-
-        {locked && (
-          <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            This product comes from the Excel sheet, so edits here would be overwritten by the next sync.
-            <button type="button" onClick={takeOver} className="ml-2 font-semibold underline">Manage here instead</button>
-          </div>
-        )}
 
         <fieldset disabled={locked} className="card grid gap-4 p-5 sm:grid-cols-2">
           <label className="sm:col-span-2"><span className="label">Product name</span>
@@ -155,7 +257,16 @@ export function ProductEditor() {
             {offer !== null && offer > 0 && <span className="mt-1 block text-xs text-ok">Shows as {offer}% off</span>}
           </label>
           <label><span className="label">Stock</span>
-            <input className="input" required type="number" min={0} step="1" value={form.stock} onChange={set('stock')} />
+            <div className="flex items-center gap-3">
+              {Number(form.stock) >= MADE_TO_ORDER
+                ? <span className="input bg-surface text-muted">Made to order</span>
+                : <input className="input" required type="number" min={0} step="1" value={form.stock} onChange={set('stock')} />}
+              <label className="flex shrink-0 items-center gap-1.5 text-sm">
+                <input type="checkbox" className="accent-black" checked={Number(form.stock) >= MADE_TO_ORDER}
+                       onChange={(e) => { setForm({ ...form, stock: e.target.checked ? String(MADE_TO_ORDER) : '10' }); setMsg(null) }} />
+                Made to order
+              </label>
+            </div>
           </label>
           <label className="flex items-center gap-2 self-end pb-2 text-sm">
             <input type="checkbox" checked={form.active} onChange={set('active')} /> Show on website
@@ -174,6 +285,7 @@ export function ProductEditor() {
           {err && <p className="text-sm text-bad" role="alert">{err}</p>}
           {msg && <p className="text-sm text-ok" role="status">{msg}</p>}
           <button className="btn-primary w-full" disabled={busy || locked}>{busy ? 'Saving…' : isNew ? 'Create product' : 'Save changes'}</button>
+          {product && <button type="button" className="btn-ghost w-full text-bad" onClick={remove}>Delete product</button>}
         </div>
       </aside>
     </form>
@@ -305,7 +417,7 @@ export function Categories() {
         <h2 className="text-2xl font-semibold">Categories</h2>
         <button className="btn-primary ml-auto" onClick={() => setEditing('new')}>+ Add category</button>
       </div>
-      <p className="text-sm text-muted">Category settings apply to every product in it: GST, shipping size/weight, making time and what the customer can personalise. Categories that are also in the Excel “categories” sheet get overwritten by the next sync.</p>
+      <p className="text-sm text-muted">Category settings apply to every product in it: GST, shipping size and weight, making time and what the customer can personalise.</p>
       {editing && <CategoryEditor initial={editing === 'new' ? null : editing} onDone={() => { setEditing(null); reload() }} />}
       {loading && !data && <Spinner />}
       {error && <ErrorBox message={error} onRetry={reload} />}
