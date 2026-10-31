@@ -15,6 +15,7 @@ import com.vindhyanstudio.catalogue.ProductRepository;
 import com.vindhyanstudio.catalogue.sync.CatalogueSource;
 import com.vindhyanstudio.config.AppProperties;
 import com.vindhyanstudio.invoice.InvoiceService;
+import com.vindhyanstudio.notify.EmailTemplates;
 import com.vindhyanstudio.notify.NotificationService;
 import com.vindhyanstudio.shipping.ShippingService;
 
@@ -34,9 +35,11 @@ public class FulfilmentListener {
     private final ProductRepository products;
     private final CatalogueSource catalogue;
     private final AppProperties props;
+    private final EmailTemplates templates;
 
     public FulfilmentListener(OrderService orders, InvoiceService invoices, ShippingService shipping, NotificationService notify,
-                              ProductRepository products, CatalogueSource catalogue, AppProperties props) {
+                              ProductRepository products, CatalogueSource catalogue, AppProperties props, EmailTemplates templates) {
+        this.templates = templates;
         this.orders = orders;
         this.invoices = invoices;
         this.shipping = shipping;
@@ -59,10 +62,7 @@ public class FulfilmentListener {
             String link = props.frontendUrl() + "/account/orders/" + o.id();
             String items = o.items().stream().map(i -> "• " + i.name() + " × " + i.qty() + "  Rs." + i.lineTotal())
                     .collect(Collectors.joining("\n"));
-            notify.email(o.customer().email(), "Order " + o.orderNo() + " confirmed — Vindhyan Studio",
-                    "Hi " + nz(o.address().name()) + ",\n\nThank you for your order " + o.orderNo() + ".\n\n" + items
-                            + "\n\nTotal: Rs." + o.total() + " (" + (o.paymentMode() == PaymentMode.COD ? "Cash on delivery" : "Paid") + ")"
-                            + "\n\nTrack your order and download the invoice: " + link + "\n\n— Vindhyan Studio", o.id());
+            notify.email(o.customer().email(), templates.orderConfirmed(o), o.id());
             notify.sms(o.customer().phone(), "Vindhyan Studio: order " + o.orderNo() + " confirmed. Total Rs." + o.total()
                     + ". Track: " + link, o.id());
             notify.email(props.seller().email(), "New order " + o.orderNo() + " — Rs." + o.total(),
@@ -97,8 +97,12 @@ public class FulfilmentListener {
                 default -> null;
             };
             if (msg == null) return;
-            notify.email(o.customer().email(), "Order " + o.orderNo() + ": " + e.status().name().toLowerCase(),
-                    msg + "\n\nDetails: " + link + "\n\n— Vindhyan Studio", o.id());
+            EmailTemplates.Email mail = switch (e.status()) {
+                case DISPATCHED -> templates.shipped(o);
+                case DELIVERED -> templates.delivered(o);
+                default -> templates.cancelled(o);
+            };
+            notify.email(o.customer().email(), mail, o.id());
             notify.sms(o.customer().phone(), "Vindhyan Studio: " + msg, o.id());
         });
     }

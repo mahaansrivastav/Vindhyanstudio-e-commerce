@@ -24,6 +24,11 @@ public class NotificationService {
         if (to != null && !to.isBlank()) send(new Message(Message.Channel.EMAIL, to, subject, body, orderId));
     }
 
+    /** Branded HTML email with a plain-text fallback. */
+    public void email(String to, EmailTemplates.Email e, Long orderId) {
+        if (to != null && !to.isBlank()) send(new Message(Message.Channel.EMAIL, to, e.subject(), e.text(), e.html(), orderId));
+    }
+
     public void sms(String to, String body, Long orderId) {
         if (to != null && !to.isBlank()) send(new Message(Message.Channel.SMS, to, null, body, orderId));
     }

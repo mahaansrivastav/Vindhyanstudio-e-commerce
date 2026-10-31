@@ -61,6 +61,7 @@ public class BrevoEmailSender implements MessageSender {
         if (replyTo != null) body.put("replyTo", Map.of("email", replyTo));
         body.put("subject", m.subject());
         body.put("textContent", m.body());
+        if (m.html() != null) body.put("htmlContent", m.html());
         http.post().uri("/smtp/email").contentType(MediaType.APPLICATION_JSON).body(body).retrieve().toBodilessEntity();
     }
 

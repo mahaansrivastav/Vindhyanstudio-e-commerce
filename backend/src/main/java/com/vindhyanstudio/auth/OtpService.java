@@ -26,8 +26,11 @@ public class OtpService {
     private final OtpCodeRepository repo;
     private final NotificationService notifications;
     private final AppProperties.Auth cfg;
+    private final com.vindhyanstudio.notify.EmailTemplates templates;
 
-    public OtpService(OtpCodeRepository repo, NotificationService notifications, AppProperties props) {
+    public OtpService(OtpCodeRepository repo, NotificationService notifications, AppProperties props,
+                      com.vindhyanstudio.notify.EmailTemplates templates) {
+        this.templates = templates;
         this.repo = repo;
         this.notifications = notifications;
         this.cfg = props.auth();
@@ -54,7 +57,7 @@ public class OtpService {
 
         String text = code + " is your Vindhyan Studio login code. It expires in " + (cfg.otpTtlSeconds() / 60) + " minutes.";
         if (identity.type() == Identity.Type.EMAIL) {
-            notifications.email(identity.value(), "Your Vindhyan Studio login code", text, null);
+            notifications.email(identity.value(), templates.otp(code, cfg.otpTtlSeconds() / 60), null);
         } else {
             notifications.sms(identity.value(), text, null);
         }
