@@ -8,7 +8,7 @@ import { defineConfig } from 'vite'
 const backend = process.env.BACKEND_URL ?? 'http://localhost:8080'
 
 // Ownership notice kept at the top of every built file (see LICENSE).
-const notice = '/*! Vindhyan Studio web app (c) 2026 Mahan Srivastava. All rights reserved. Licensed to MORVIN INTEGRATED SOLUTIONS for its own store only; copying, reuse or redistribution is prohibited. */'
+const notice = '/*! (c) 2026 Mahan Srivastava. All rights reserved. */'
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), {
