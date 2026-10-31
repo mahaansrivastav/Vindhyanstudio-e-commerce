@@ -32,3 +32,7 @@ vindhyan-netlify-dist.zip
 
 # Local payment test keys
 backend/.env.razorpay.local
+
+# Supabase region move (credentials for the new project)
+backend/.env.mumbai.local
+*.dump
