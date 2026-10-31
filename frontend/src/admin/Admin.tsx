@@ -37,11 +37,6 @@ export function Admin() {
         <Route path="categories" element={<Categories />} />
         <Route path="catalogue" element={<Catalogue />} />
       </Routes>
-      <p className="border-t border-line pt-4 text-center text-xs text-muted">
-        Website designed &amp; developed by{' '}
-        <a href="https://github.com/mahaansrivastav" target="_blank" rel="noopener" className="font-semibold text-ink underline underline-offset-2">Mahan Srivastava</a>
-        {' '}· For changes or support, contact your developer.
-      </p>
     </div>
   )
 }
