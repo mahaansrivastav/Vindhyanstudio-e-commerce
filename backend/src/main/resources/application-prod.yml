@@ -20,4 +20,4 @@ app:
   storage:
     provider: ${STORAGE_PROVIDER:supabase}
   notifications:
-    email: ${NOTIFY_EMAIL:smtp}
+    email: ${NOTIFY_EMAIL:brevo}

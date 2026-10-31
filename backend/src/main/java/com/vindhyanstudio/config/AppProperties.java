@@ -57,7 +57,7 @@ public record AppProperties(
                                  boolean autoBook, boolean cancelOnOrderCancel) {}
     }
 
-    public record Notifications(String email, String sms, String fromEmail) {}
+    public record Notifications(String email, String sms, String fromEmail, String brevoApiKey) {}
 
     private static List<String> split(String csv) {
         if (csv == null || csv.isBlank()) return List.of();

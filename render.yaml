@@ -42,15 +42,10 @@ services:
       - { key: SUPABASE_SERVICE_KEY, sync: false }
       - { key: SUPABASE_PUBLIC_BUCKET, value: catalogue }
       - { key: SUPABASE_PRIVATE_BUCKET, value: private }
-      # Email (Brevo SMTP)
-      - { key: NOTIFY_EMAIL, value: smtp }
+      # Email (Brevo HTTPS API; works on Render's free plan, unlike SMTP)
+      - { key: NOTIFY_EMAIL, value: brevo }
       - { key: NOTIFY_FROM_EMAIL, sync: false }
-      - { key: SPRING_MAIL_HOST, value: smtp-relay.brevo.com }
-      - { key: SPRING_MAIL_PORT, value: "587" }
-      - { key: SPRING_MAIL_USERNAME, sync: false }
-      - { key: SPRING_MAIL_PASSWORD, sync: false }
-      - { key: SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH, value: "true" }
-      - { key: SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE, value: "true" }
+      - { key: BREVO_API_KEY, sync: false }
       - { key: NOTIFY_SMS, value: console }
       # Payments: disabled | razorpay | cashfree  (change here, then fill that gateway's keys)
       - { key: PAYMENT_PROVIDER, value: disabled }

@@ -167,7 +167,7 @@ public class StartupReport {
         }
 
         section(b, "Login");
-        boolean emailReal = "smtp".equals(p.notifications().email());
+        boolean emailReal = "smtp".equals(p.notifications().email()) || "brevo".equals(p.notifications().email());
         boolean phoneLogin = p.auth().exposeOtp() || !"console".equals(p.notifications().sms());
         row(b, "Email OTP", emailReal ? "ON (codes sent by email)" : "ON (codes only printed in this log)");
         row(b, "Mobile OTP", phoneLogin ? "ON" : "OFF (no SMS/WhatsApp sender configured)");
@@ -177,7 +177,7 @@ public class StartupReport {
         row(b, "Admins", String.join(", ", p.admin().identityList().stream().map(StartupReport::maskId).toList()));
         if (prod && p.auth().exposeOtp()) warn.add("OTP is shown on screen in production; anyone can log in as anyone.");
         if (prod && DEFAULT_JWT.equals(p.auth().jwtSecret())) warn.add("JWT_SECRET is the default; set a random value.");
-        if (!emailReal && prod) warn.add("Email is not 'smtp'; customers will not receive login codes.");
+        if (!emailReal && prod) warn.add("NOTIFY_EMAIL is 'console'; customers will not receive login codes.");
         if (p.admin().identityList().stream().anyMatch(a -> a.endsWith(".local")))
             warn.add("ADMIN_IDENTITIES still has the placeholder admin.");
 
@@ -232,13 +232,15 @@ public class StartupReport {
         if (prod && "mock".equals(s.provider())) warn.add("SHIPPING_PROVIDER=mock in production.");
 
         section(b, "Notifications & storage");
-        row(b, "Email", emailReal ? "SMTP via " + env.getProperty("spring.mail.host", "(host MISSING)") + ":" + env.getProperty("spring.mail.port", "?")
+        row(b, "Email", "brevo".equals(p.notifications().email())
+                ? "Brevo API (" + (set(p.notifications().brevoApiKey()) ? "key set" : "BREVO_API_KEY MISSING") + ")"
+                : emailReal ? "SMTP via " + env.getProperty("spring.mail.host", "(host MISSING)") + ":" + env.getProperty("spring.mail.port", "?")
                 + " as " + (set(env.getProperty("spring.mail.username")) ? maskId(env.getProperty("spring.mail.username")) : "(user MISSING)")
                 + (set(env.getProperty("spring.mail.password")) ? "" : ", password MISSING") : "console (printed in log)");
         row(b, "From", p.notifications().fromEmail());
         row(b, "SMS / WhatsApp", "console".equals(p.notifications().sms()) ? "OFF (console)" : p.notifications().sms());
         row(b, "Owner WhatsApp link", set(p.seller().whatsapp()) ? "wa.me/" + p.seller().whatsapp() : "OFF");
-        if (emailReal && !set(env.getProperty("spring.mail.host"))) warn.add("NOTIFY_EMAIL=smtp but SPRING_MAIL_HOST is not set.");
+        if ("smtp".equals(p.notifications().email()) && !set(env.getProperty("spring.mail.host"))) warn.add("NOTIFY_EMAIL=smtp but SPRING_MAIL_HOST is not set.");
         String st = p.storage().provider();
         row(b, "File storage", "supabase".equals(st)
                 ? "Supabase (" + (set(p.storage().supabase().url()) ? dbHost(p.storage().supabase().url()) : "URL MISSING") + ")"
