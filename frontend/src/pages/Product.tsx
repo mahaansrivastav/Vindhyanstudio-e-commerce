@@ -93,31 +93,31 @@ export function Product() {
 
   return (
     <div className="space-y-6">
-      <nav className="text-sm text-muted" aria-label="Breadcrumb">
-        <Link to="/" className="hover:text-brand">Home</Link> <span className="mx-1">/</span>
-        <Link to={`/shop?category=${p.categorySlug}`} className="hover:text-brand">{p.category}</Link> <span className="mx-1">/</span>
-        <span className="text-ink">{p.name}</span>
+      <nav className="truncate text-sm text-muted" aria-label="Breadcrumb">
+        <Link to="/" className="hover:text-ink">Home</Link> <span className="mx-1.5 text-line">/</span>
+        <Link to={`/shop?category=${p.categorySlug}`} className="hover:text-ink">{p.category}</Link> <span className="mx-1.5 text-line">/</span>
+        <span className="text-ink/80">{p.name}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
         {/* Gallery */}
         <div className="space-y-3 lg:sticky lg:top-36 lg:self-start">
-          <div className="overflow-hidden rounded-3xl border border-line bg-surface">
+          <div className="overflow-hidden rounded-xl bg-surface">
             {hasPreview && img === 0
               ? <KeyringPreview text={text} colour={colour} style={size} className="aspect-square w-full" />
               : <ProductImage src={p.images[hasPreview ? img - 1 : img] ?? null} alt={p.name} className="aspect-square w-full" />}
           </div>
           {slides > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
+            <div className="flex gap-2 overflow-x-auto p-0.5">
               {hasPreview && (
-                <button onClick={() => setImg(0)} className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 bg-brand-soft text-[11px] font-bold text-brand ${img === 0 ? 'border-brand' : 'border-transparent'}`}>
+                <button onClick={() => setImg(0)} className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-surface text-[11px] font-medium ${img === 0 ? 'ring-2 ring-ink' : 'ring-1 ring-line'}`}>
                   Your design
                 </button>
               )}
               {p.images.map((src, i) => {
                 const idx = hasPreview ? i + 1 : i
                 return (
-                  <button key={src} onClick={() => setImg(idx)} className={`shrink-0 overflow-hidden rounded-xl border-2 ${idx === img ? 'border-brand' : 'border-transparent'}`} aria-label={`Photo ${i + 1}`}>
+                  <button key={src} onClick={() => setImg(idx)} className={`shrink-0 overflow-hidden rounded-lg ${idx === img ? 'ring-2 ring-ink' : 'ring-1 ring-line opacity-80 hover:opacity-100'}`} aria-label={`Photo ${i + 1}`}>
                     <img src={src} alt="" className="h-16 w-16 object-cover" />
                   </button>
                 )
@@ -129,15 +129,15 @@ export function Product() {
         {/* Details + designer */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl leading-tight">{p.name}</h1>
+            <h1 className="text-3xl leading-tight sm:text-4xl">{p.name}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-3"><Price price={p.sellingPrice} mrp={p.mrp} offer={p.offerPct} size="lg" /><StockBadge stock={p.stock} /></div>
-            <p className="mt-1 text-xs text-muted">Inclusive of all taxes · {madeToOrder ? `Ready to ship in ~${p.leadTimeDays} days` : 'Ships in 1–2 days'}</p>
+            <p className="mt-1.5 text-sm text-muted">Inclusive of all taxes · {madeToOrder ? `Ready to ship in ~${p.leadTimeDays} days` : 'Ships in 1–2 days'}</p>
           </div>
 
           {customisable && (
             <div className="card divide-y divide-line">
               <div className="px-5 py-4">
-                <p className="font-bold">Personalise it</p>
+                <p className="font-medium">Personalise it</p>
                 <p className="text-sm text-muted">{hasPreview ? 'Your choices update the preview instantly.' : 'Tell us how you want it made.'}</p>
               </div>
 
@@ -211,43 +211,44 @@ export function Product() {
           {p.stock > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold">Quantity</span>
-                <div className="flex items-center rounded-xl border border-line">
+                <span className="text-sm text-muted">Quantity</span>
+                <div className="flex items-center rounded-lg border border-line">
                   <button className="px-3 py-2 text-lg" onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease">−</button>
-                  <span className="w-8 text-center text-sm font-bold">{qty}</span>
+                  <span className="w-8 text-center text-sm font-semibold">{qty}</span>
                   <button className="px-3 py-2 text-lg" onClick={() => setQty(Math.min(Math.min(20, p.stock), qty + 1))} aria-label="Increase">+</button>
                 </div>
-                <span className="ml-auto text-lg font-extrabold">₹{(p.sellingPrice * qty).toLocaleString('en-IN')}</span>
+                <span className="ml-auto text-lg font-semibold tracking-tight">₹{(p.sellingPrice * qty).toLocaleString('en-IN')}</span>
               </div>
               {formErr && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-bad" role="alert">{formErr}</p>}
               <div className="flex gap-2">
-                <button className="btn-primary flex-1 py-3.5 text-base" onClick={() => addToCart(true)} disabled={uploading}>Buy now</button>
-                <button className="btn-outline flex-1 py-3.5 text-base" onClick={() => addToCart(false)} disabled={uploading}>Add to cart</button>
+                <button className="btn-primary flex-1 py-3 text-[15px]" onClick={() => addToCart(true)} disabled={uploading}>Buy now</button>
+                <button className="btn-outline flex-1 py-3 text-[15px]" onClick={() => addToCart(false)} disabled={uploading}>Add to cart</button>
                 <button className="btn-outline px-3.5" onClick={() => wish.toggle({ sku: p.sku, slug: p.slug, name: p.name, image: p.images[0] ?? null, price: p.sellingPrice })}
                         aria-label={saved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={saved}><Heart filled={saved} /></button>
               </div>
-              {added && <p className="text-sm text-ok">✓ Added to cart. <Link to="/cart" className="font-bold underline">View cart</Link></p>}
+              {added && <p className="text-sm text-ok">✓ Added to cart. <Link to="/cart" className="font-semibold underline">View cart</Link></p>}
             </div>
           ) : (
             <button className="btn-outline w-full py-3.5" disabled>Out of stock</button>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-2xl bg-surface p-4 text-sm"><IconTruck className="mt-0.5 h-5 w-5 shrink-0 text-brand" /><span><b>Free shipping</b> above ₹999. Tracking on every order.</span></div>
-            <div className="flex items-start gap-3 rounded-2xl bg-surface p-4 text-sm"><IconShield className="mt-0.5 h-5 w-5 shrink-0 text-brand" /><span><b>Secure payment</b> by UPI, card, net banking or COD.</span></div>
+          <div className="divide-y divide-line rounded-xl border border-line">
+            <div className="p-4"><PincodeCheck leadDays={madeToOrder ? p.leadTimeDays : 1} /></div>
+            <InfoRow icon={<IconTruck className="h-5 w-5" />}>Free shipping above ₹{config?.freeShippingAbove ?? 999}, with tracking on every order</InfoRow>
+            <InfoRow icon={<IconShield className="h-5 w-5" />}>Pay by UPI, card or net banking{config?.codEnabled ? ', or cash on delivery' : ''}</InfoRow>
+            {config?.whatsapp && (
+              <InfoRow icon={<IconChat />}>
+                Need a custom size or colour?{' '}
+                <a href={`https://wa.me/${config.whatsapp}?text=${encodeURIComponent(`Hi! I have a question about ${p.name} (${p.sku}).`)}`} target="_blank" rel="noopener"
+                   className="font-medium text-ink underline underline-offset-2">Ask on WhatsApp</a>
+              </InfoRow>
+            )}
           </div>
           {madeToOrder && !p.returnable && <p className="text-xs text-muted">Personalised items are made just for you and can’t be returned unless damaged or defective. <Link to="/policies/refund" className="underline">Returns policy</Link></p>}
 
-          {config?.whatsapp && (
-            <a href={`https://wa.me/${config.whatsapp}?text=${encodeURIComponent(`Hi! I have a question about ${p.name} (${p.sku}).`)}`} target="_blank" rel="noopener"
-               className="btn-outline w-full border-[#25D366] text-[#128C7E]">Questions or a custom size? Ask us on WhatsApp</a>
-          )}
-
-          <div className="card p-5"><PincodeCheck leadDays={madeToOrder ? p.leadTimeDays : 1} /></div>
-
           <div>
             <h2 className="text-lg">Product details</h2>
-            <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink/80">{p.description}</p>
+            <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-ink/75">{p.description}</p>
             <p className="mt-3 text-xs text-muted">SKU {p.sku} · Country of origin: India</p>
           </div>
         </div>
@@ -259,14 +260,22 @@ export function Product() {
 function Step({ n, title, aside, children }: { n: number; title: string; aside?: string; children: React.ReactNode }) {
   return (
     <div className="px-5 py-4">
-      <p className="mb-3 flex items-center gap-2 text-sm font-bold">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs text-white">{n}</span>
+      <p className="mb-3 flex items-center gap-2 text-sm font-medium">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface text-[11px] text-muted">{n}</span>
         {title}
         {aside && <span className="font-normal text-muted">· {aside}</span>}
       </p>
       {children}
     </div>
   )
+}
+
+function InfoRow({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return <div className="flex items-start gap-3 px-4 py-3 text-sm text-ink/80"><span className="mt-px shrink-0 text-ink/50">{icon}</span><span>{children}</span></div>
+}
+
+function IconChat() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>
 }
 
 function knownColour(name: string) {

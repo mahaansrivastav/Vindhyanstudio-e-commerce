@@ -1,19 +1,21 @@
 @import "tailwindcss";
 
+/* Design: clean retail layout, Inter throughout, large tight headings.
+   One radius scale (8px controls, 12px cards), hairline borders, no decorative shadows. */
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  --color-ink: #14161b;
-  --color-muted: #5d6470;
-  --color-line: #e3e6eb;
+  --color-ink: #0a0a0a;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
   --color-paper: #ffffff;
   --color-card: #ffffff;
-  --color-surface: #f4f6f9;
-  --color-brand: #26282e;
-  --color-brand-dark: #0f1013;
-  --color-brand-soft: #f7f1e6;
-  --color-accent: #c8892e;
+  --color-surface: #f5f5f7;
+  --color-brand: #111827;
+  --color-brand-dark: #000000;
+  --color-brand-soft: #f5f5f7;
+  --color-accent: #b4741f;
   --color-ok: #15803d;
   --color-warn: #b45309;
   --color-bad: #c42b2b;
@@ -21,36 +23,37 @@
 
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
-  body { @apply bg-paper text-ink font-sans antialiased; }
-  h1, h2, h3 { @apply font-display font-extrabold tracking-tight; }
+  body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: "cv11", "ss01"; }
+  h1, h2, h3 { @apply font-display font-semibold; letter-spacing: -0.025em; }
+  h1 { letter-spacing: -0.035em; }
 }
 
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed;
 }
 @utility btn-primary {
-  @apply btn bg-brand text-white shadow-sm hover:bg-brand-dark;
+  @apply btn bg-brand text-white hover:bg-brand-dark;
 }
 @utility btn-outline {
-  @apply btn border border-line bg-card hover:border-ink;
+  @apply btn border border-line bg-card hover:border-ink/40;
 }
 @utility btn-ghost {
-  @apply btn hover:bg-stone-100;
+  @apply btn hover:bg-surface;
 }
 @utility input {
-  @apply w-full rounded-xl border border-line bg-card px-3 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/15;
+  @apply w-full rounded-lg border border-line bg-card px-3 py-2.5 text-sm outline-none transition focus:border-ink/50 focus:ring-2 focus:ring-ink/5;
 }
 @utility label {
-  @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-muted;
+  @apply mb-1.5 block text-sm font-medium text-ink;
 }
 @utility card {
-  @apply rounded-2xl border border-line bg-card shadow-[0_1px_2px_rgba(16,24,40,0.04)];
+  @apply rounded-xl border border-line bg-card;
 }
 @utility chip {
-  @apply rounded-full border border-line px-3 py-1.5 text-sm transition hover:border-ink;
+  @apply rounded-lg border border-line px-3 py-1.5 text-sm transition hover:border-ink/40;
 }
 @utility chip-on {
-  @apply border-brand bg-brand-soft text-brand font-semibold;
+  @apply border-ink bg-ink text-white;
 }
 @utility scrollbar-none {
   scrollbar-width: none;

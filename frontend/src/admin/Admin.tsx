@@ -21,7 +21,7 @@ export function Admin() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-bold">Studio admin</h1>
+        <h1 className="text-3xl font-semibold">Studio admin</h1>
         <nav className="ml-auto flex gap-1">
           <NavLink to="/admin" end className={({ isActive }) => `${tab} ${isActive ? 'bg-ink text-white' : 'text-muted'}`}>Orders</NavLink>
           <NavLink to="/admin/products" className={({ isActive }) => `${tab} ${isActive ? 'bg-ink text-white' : 'text-muted'}`}>Products</NavLink>
@@ -103,7 +103,7 @@ function Stat({ label, value, highlight }: { label: string; value: string | numb
   return (
     <div className={`card p-4 ${highlight ? 'border-brand bg-brand-soft' : ''}`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold">{value}</p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   )
 }
@@ -133,7 +133,7 @@ function AdminOrder() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/admin" className="text-sm text-muted">← Orders</Link>
-          <h2 className="text-2xl font-bold">{o.orderNo}</h2>
+          <h2 className="text-2xl font-semibold">{o.orderNo}</h2>
           <StatusBadge status={o.status} />
         </div>
         <section className="card divide-y divide-line">

@@ -6,7 +6,7 @@ const COLOURS: Record<string, string> = {
 }
 
 const STYLES: Record<string, { font: string; weight: number; spacing: number; width: number }> = {
-  classic: { font: '"Plus Jakarta Sans", sans-serif', weight: 800, spacing: 0, width: 0.62 },
+  classic: { font: 'Inter, sans-serif', weight: 800, spacing: 0, width: 0.62 },
   script: { font: 'Pacifico, cursive', weight: 400, spacing: 0, width: 0.62 },
   bold: { font: '"Archivo Black", sans-serif', weight: 400, spacing: 1, width: 0.72 },
   rounded: { font: 'Fredoka, sans-serif', weight: 600, spacing: 0, width: 0.58 },
@@ -28,7 +28,7 @@ export function KeyringPreview({ text, colour, style, className = '' }: { text: 
   const left = 420 - width / 2
 
   return (
-    <div className={`relative flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_30%_20%,#fff6ec,#ffd9b8)] ${className}`}>
+    <div className={`relative flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_30%_20%,#ffffff,#ebebee)] ${className}`}>
       <svg viewBox="0 0 840 840" className="h-full w-full" role="img" aria-label={`Preview: ${name} keychain in ${colour ?? 'black'}, ${style ?? 'classic'} style`}>
         <defs>
           <filter id="kshadow" x="-20%" y="-30%" width="140%" height="180%"><feDropShadow dx="0" dy="16" stdDeviation="14" floodOpacity="0.22" /></filter>
@@ -41,7 +41,7 @@ export function KeyringPreview({ text, colour, style, className = '' }: { text: 
           <g filter="url(#kshadow)">
             {/* eyelet */}
             <circle cx={left - 12} cy="440" r="30" fill={base} stroke={edge} strokeWidth="4" />
-            <circle cx={left - 12} cy="440" r="11" fill="#ffd9b8" />
+            <circle cx={left - 12} cy="440" r="11" fill="#ebebee" />
             {/* outline base under the letters */}
             <text x="420" y="430" textAnchor="middle" dominantBaseline="central" fontFamily={s.font} fontWeight={s.weight}
                   fontSize={size} letterSpacing={s.spacing} fill={base} stroke={base} strokeWidth={size * 0.32} strokeLinejoin="round">{name}</text>
@@ -53,7 +53,7 @@ export function KeyringPreview({ text, colour, style, className = '' }: { text: 
                 fontSize={size} letterSpacing={s.spacing} fill={fill} stroke="#00000026" strokeWidth="2">{name}</text>
         </g>
       </svg>
-      <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-muted shadow-sm">Live preview · actual colours may vary slightly</span>
+      <span className="absolute bottom-3 left-4 text-[11px] text-muted">Preview · actual colours may vary slightly</span>
     </div>
   )
 }

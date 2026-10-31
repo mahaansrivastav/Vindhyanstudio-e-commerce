@@ -57,7 +57,7 @@ export function Checkout() {
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
       <div className="space-y-6">
         <Steps current={2} />
-        <h1 className="text-3xl font-bold">Checkout</h1>
+        <h1 className="text-3xl font-semibold">Checkout</h1>
 
         <section className="card p-5">
           <h2 className="font-sans text-base font-semibold">1. Delivery address</h2>

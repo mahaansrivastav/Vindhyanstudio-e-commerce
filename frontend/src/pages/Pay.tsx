@@ -64,7 +64,7 @@ export function Pay() {
           <div className="card flex flex-wrap items-end justify-between gap-3 p-5">
             <div>
               <p className="label">Amount to pay</p>
-              <p className="text-3xl font-bold">{rupees(o.total, true)}</p>
+              <p className="text-3xl font-semibold">{rupees(o.total, true)}</p>
               <p className="text-sm text-muted">Order {o.orderNo} · inclusive of all taxes</p>
             </div>
             {testMode && <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">Test mode · no real money</span>}

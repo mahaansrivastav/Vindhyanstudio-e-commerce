@@ -40,7 +40,7 @@ export function Cart() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div>
-        <h1 className="text-3xl font-bold">Cart</h1>
+        <h1 className="text-3xl font-semibold">Cart</h1>
         <ul className="mt-6 divide-y divide-line">
           {cart.lines.map((l, i) => {
             const q = quote?.lines[i]
@@ -87,7 +87,7 @@ export function Cart() {
 
 export function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <div className={`flex justify-between text-sm ${bold ? 'text-base font-bold' : ''}`}>
+    <div className={`flex justify-between text-sm ${bold ? 'text-base font-semibold' : ''}`}>
       <span className={bold ? '' : 'text-muted'}>{label}</span><span>{value}</span>
     </div>
   )

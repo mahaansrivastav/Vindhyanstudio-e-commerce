@@ -38,14 +38,14 @@ export function OrderDetail() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {placed && o.status !== 'PAYMENT_PENDING' && (
-        <div className="rounded-2xl bg-green-50 p-5 text-green-900">
-          <p className="text-lg font-bold">Thank you! Your order is confirmed.</p>
+        <div className="rounded-xl bg-green-50 p-5 text-green-900">
+          <p className="text-lg font-semibold">Thank you! Your order is confirmed.</p>
           <p className="text-sm">We’ve sent the details to you. We’ll message you again when it ships.</p>
         </div>
       )}
       {o.status === 'PAYMENT_PENDING' && (
-        <div className="rounded-2xl bg-amber-50 p-5 text-amber-900">
-          <p className="font-bold">Payment pending</p>
+        <div className="rounded-xl bg-amber-50 p-5 text-amber-900">
+          <p className="font-semibold">Payment pending</p>
           <p className="text-sm">Your order is saved. Complete the payment to confirm it. Nothing is charged twice.</p>
           {payErr && <p className="mt-2 text-sm text-bad">{payErr}</p>}
           {o.canPay && <Link to={`/pay/${o.id}`} className="btn-primary mt-3">Pay {rupees(o.total)}</Link>}
@@ -55,7 +55,7 @@ export function OrderDetail() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link to="/account/orders" className="text-sm text-muted">← My orders</Link>
-          <h1 className="mt-1 text-3xl font-bold">Order {o.orderNo}</h1>
+          <h1 className="mt-1 text-3xl font-semibold">Order {o.orderNo}</h1>
           <p className="text-sm text-muted">Placed {dateTime(o.createdAt)} · {o.paymentMode === 'COD' ? 'Cash on delivery' : 'Paid online'}</p>
         </div>
         <StatusBadge status={o.status} />

@@ -8,16 +8,16 @@ import { useAuth } from '../state/AppState'
 export function Price({ price, mrp, offer, size = 'md' }: { price: number; mrp: number; offer: number; size?: 'md' | 'lg' }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-2">
-      <span className={size === 'lg' ? 'text-2xl font-bold' : 'font-semibold'}>{rupees(price)}</span>
+      <span className={size === 'lg' ? 'text-[28px] font-semibold tracking-tight' : 'font-semibold'}>{rupees(price)}</span>
       {mrp > price && <span className="text-sm text-muted line-through">{rupees(mrp)}</span>}
-      {offer > 0 && <span className="text-sm font-semibold text-ok">{offer}% off</span>}
+      {offer > 0 && <span className="text-sm font-medium text-accent">{offer}% off</span>}
     </div>
   )
 }
 
 export function StockBadge({ stock }: { stock: number }) {
-  if (stock <= 0) return <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs font-semibold text-stone-700">Out of stock</span>
-  if (stock <= 3) return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Only {stock} left</span>
+  if (stock <= 0) return <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-muted">Out of stock</span>
+  if (stock <= 3) return <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-warn">Only {stock} left</span>
   return null
 }
 
@@ -28,7 +28,7 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
 export function Spinner({ label = 'Loading…' }: { label?: string }) {
   return (
     <div className="flex items-center justify-center gap-3 py-16 text-sm text-muted" role="status">
-      <span className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-brand" />
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-ink" />
       {label}
     </div>
   )

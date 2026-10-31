@@ -114,7 +114,7 @@ export function Login() {
 
   return (
     <div className="mx-auto max-w-sm">
-      <h1 className="text-3xl font-bold">Log in or sign up</h1>
+      <h1 className="text-3xl font-semibold">Log in or sign up</h1>
       <p className="mt-1 text-sm text-muted">No password needed. We’ll send you a one-time code.</p>
       <div className={`mt-6 grid ${phone ? 'grid-cols-2' : 'grid-cols-1'} rounded-xl bg-stone-100 p-1 text-sm font-semibold`} role="tablist">
         {(phone ? (['phone', 'email'] as const) : (['email'] as const)).map((m) => (

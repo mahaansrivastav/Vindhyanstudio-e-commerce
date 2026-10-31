@@ -13,7 +13,7 @@ const STEPS: { key: OrderStatus; label: string; hint: string }[] = [
 export function OrderProgress({ status, events = [] }: { status: OrderStatus; events?: { status: OrderStatus; at: string }[] }) {
   if (status === 'PAYMENT_PENDING' || status === 'CANCELLED' || status === 'RTO') {
     const text = status === 'PAYMENT_PENDING' ? 'Waiting for payment' : status === 'CANCELLED' ? 'This order was cancelled' : 'Returned to sender'
-    return <div className={`rounded-2xl p-4 text-sm font-semibold ${status === 'PAYMENT_PENDING' ? 'bg-amber-50 text-amber-900' : 'bg-stone-100 text-stone-700'}`}>{text}</div>
+    return <div className={`rounded-xl p-4 text-sm font-semibold ${status === 'PAYMENT_PENDING' ? 'bg-amber-50 text-amber-900' : 'bg-stone-100 text-stone-700'}`}>{text}</div>
   }
   const idx = STEPS.findIndex((s) => s.key === status)
   const when = (k: OrderStatus) => {
@@ -31,10 +31,10 @@ export function OrderProgress({ status, events = [] }: { status: OrderStatus; ev
           const current = i === idx
           return (
             <li key={s.key} className="relative flex flex-col items-center text-center" aria-current={current ? 'step' : undefined}>
-              <span className={`z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-bold ${done ? 'border-ok bg-ok text-white' : 'border-line bg-white text-muted'} ${current ? 'ring-4 ring-green-100' : ''}`}>
+              <span className={`z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-semibold ${done ? 'border-ok bg-ok text-white' : 'border-line bg-white text-muted'} ${current ? 'ring-4 ring-green-100' : ''}`}>
                 {done ? <IconCheck /> : i + 1}
               </span>
-              <span className={`mt-2 text-[11px] font-bold sm:text-sm ${done ? 'text-ink' : 'text-muted'}`}>{s.label}</span>
+              <span className={`mt-2 text-[11px] font-semibold sm:text-sm ${done ? 'text-ink' : 'text-muted'}`}>{s.label}</span>
               <span className="hidden text-xs text-muted sm:block">{done ? (when(s.key) ?? '') : ''}</span>
             </li>
           )

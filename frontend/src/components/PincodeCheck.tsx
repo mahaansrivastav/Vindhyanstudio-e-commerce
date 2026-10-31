@@ -29,9 +29,9 @@ export function PincodeCheck({ leadDays = 0 }: { leadDays?: number }) {
 
   return (
     <form onSubmit={check} className="space-y-2">
-      <label className="label" htmlFor="pincode">Check delivery</label>
+      <label className="text-sm font-medium" htmlFor="pincode">Delivery</label>
       <div className="flex gap-2">
-        <input id="pincode" inputMode="numeric" maxLength={6} className="input" placeholder="Pincode" value={pin}
+        <input id="pincode" inputMode="numeric" maxLength={6} className="input" placeholder="Enter pincode" value={pin}
                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
         <button className="btn-outline shrink-0" disabled={busy}>{busy ? 'Checking…' : 'Check'}</button>
       </div>

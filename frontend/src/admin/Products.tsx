@@ -122,7 +122,7 @@ export function ProductEditor() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/admin/products" className="text-sm text-muted">← Products</Link>
-          <h2 className="text-2xl font-bold">{isNew ? 'Add product' : product!.name}</h2>
+          <h2 className="text-2xl font-semibold">{isNew ? 'Add product' : product!.name}</h2>
           {product && product.active && <a href={`/p/${product.slug}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-brand">View on site ↗</a>}
         </div>
 
@@ -302,7 +302,7 @@ export function Categories() {
     <div className="max-w-4xl space-y-4">
       <div className="flex items-center gap-3">
         <Link to="/admin/products" className="text-sm text-muted">← Products</Link>
-        <h2 className="text-2xl font-bold">Categories</h2>
+        <h2 className="text-2xl font-semibold">Categories</h2>
         <button className="btn-primary ml-auto" onClick={() => setEditing('new')}>+ Add category</button>
       </div>
       <p className="text-sm text-muted">Category settings apply to every product in it: GST, shipping size/weight, making time and what the customer can personalise. Categories that are also in the Excel “categories” sheet get overwritten by the next sync.</p>

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vindhyan Studio style board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e9e9ec; font-family: Inter, system-ui, sans-serif; color: #1a1a1a; padding: 32px 16px 80px; }
+  .board-title { max-width: 1200px; margin: 0 auto 8px; font-size: 22px; font-weight: 600; }
+  .board-sub { max-width: 1200px; margin: 0 auto 32px; color: #555; font-size: 15px; line-height: 1.6; }
+  .dir { max-width: 1200px; margin: 0 auto 56px; }
+  .dir-label { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .dir-label b { font-size: 18px; }
+  .dir-label span { color: #555; font-size: 14px; }
+  .frame { border-radius: 14px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 40px rgba(0,0,0,.08); }
+  img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .row { display: flex; align-items: center; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 760px) { .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hide-sm { display: none !important; } .hero-grid { grid-template-columns: 1fr !important; } }
+  .notes { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .notes div { background: #fff; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; color: #333; }
+  .notes b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #777; margin-bottom: 4px; }
+
+  /* ---------- A: Clean retail ---------- */
+  .A { background: #fff; font-family: Inter, sans-serif; color: #111827; }
+  .A .bar { background: #f3f4f6; color: #374151; font-size: 12px; text-align: center; padding: 8px; }
+  .A header { border-bottom: 1px solid #e5e7eb; padding: 14px 32px; gap: 28px; }
+  .A .logo { font-weight: 600; letter-spacing: .14em; font-size: 15px; }
+  .A .search { flex: 1; max-width: 520px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 9px 14px; color: #9ca3af; font-size: 14px; }
+  .A .icons { margin-left: auto; gap: 22px; font-size: 13px; color: #374151; }
+  .A nav { padding: 0 32px; gap: 26px; font-size: 14px; color: #4b5563; border-bottom: 1px solid #e5e7eb; }
+  .A nav a { padding: 12px 0; }
+  .A nav a.on { color: #111827; font-weight: 500; box-shadow: inset 0 -2px #111827; }
+  .A .hero { padding: 48px 32px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; }
+  .A h1 { font-size: 44px; line-height: 1.1; font-weight: 600; letter-spacing: -.02em; }
+  .A .lead { margin-top: 14px; font-size: 16px; line-height: 1.6; color: #4b5563; max-width: 440px; }
+  .A .btn { display: inline-block; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; }
+  .A .btn.p { background: #111827; color: #fff; }
+  .A .btn.s { border: 1px solid #d1d5db; color: #111827; margin-left: 8px; }
+  .A .heroimg { height: 320px; border-radius: 12px; overflow: hidden; background: #f3f4f6; }
+  .A .sec { padding: 8px 32px 40px; }
+  .A h2 { font-size: 20px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; }
+  .A h2 a { font-size: 14px; font-weight: 500; color: #4b5563; }
+  .A .cats { gap: 12px; }
+  .A .cat { border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 14px 8px 8px; gap: 10px; font-size: 14px; font-weight: 500; }
+  .A .cat i { width: 40px; height: 40px; border-radius: 6px; overflow: hidden; display: block; }
+  .A .grid4 { gap: 20px; }
+  .A .card .ph { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #f3f4f6; position: relative; }
+  .A .card .tag { position: absolute; top: 10px; left: 10px; background: #fff; color: #b45309; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+  .A .card .nm { margin-top: 10px; font-size: 14px; color: #111827; }
+  .A .card .pr { margin-top: 4px; font-size: 15px; font-weight: 600; }
+  .A .card .pr s { color: #9ca3af; font-weight: 400; font-size: 13px; margin-left: 6px; }
+
+  /* ---------- B: Warm boutique ---------- */
+  .B { background: #faf7f2; font-family: Manrope, sans-serif; color: #2b2622; }
+  .B .bar { background: #2b2622; color: #e9e1d5; font-size: 12px; text-align: center; padding: 8px; letter-spacing: .04em; }
+  .B header { padding: 18px 40px; gap: 28px; }
+  .B .logo { font-family: Fraunces, serif; font-size: 22px; font-weight: 500; letter-spacing: .02em; }
+  .B .logo small { display: block; font-family: Manrope; font-size: 9px; letter-spacing: .45em; color: #8a7f74; }
+  .B .search { flex: 1; max-width: 460px; border-bottom: 1px solid #d8cfc2; padding: 8px 2px; color: #a0968a; font-size: 14px; }
+  .B .icons { margin-left: auto; gap: 22px; font-size: 13px; }
+  .B nav { padding: 0 40px 14px; gap: 30px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #6f655b; border-bottom: 1px solid #e8e0d4; }
+  .B nav a.on { color: #2b2622; }
+  .B .hero { padding: 56px 40px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
+  .B .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #a8732a; }
+  .B h1 { font-family: Fraunces, serif; font-weight: 400; font-size: 52px; line-height: 1.05; margin-top: 12px; }
+  .B .lead { margin-top: 16px; font-size: 16px; line-height: 1.7; color: #5e554c; max-width: 420px; }
+  .B .btn { display: inline-block; padding: 14px 26px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  .B .btn.p { background: #2b2622; color: #faf7f2; }
+  .B .btn.s { color: #2b2622; text-decoration: underline; text-underline-offset: 6px; margin-left: 14px; }
+  .B .heroimg { height: 380px; overflow: hidden; }
+  .B .sec { padding: 8px 40px 48px; }
+  .B h2 { font-family: Fraunces, serif; font-weight: 400; font-size: 30px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: baseline; }
+  .B h2 a { font-family: Manrope; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #6f655b; }
+  .B .cats { gap: 18px; }
+  .B .cat { flex: 1; text-align: center; font-size: 14px; font-weight: 500; }
+  .B .cat i { display: block; aspect-ratio: 4/5; overflow: hidden; margin-bottom: 10px; }
+  .B .grid4 { gap: 24px; }
+  .B .card .ph { aspect-ratio: 4/5; overflow: hidden; background: #efe8de; position: relative; }
+  .B .card .tag { position: absolute; top: 12px; left: 12px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2b2622; background: #faf7f2; padding: 4px 8px; }
+  .B .card .nm { margin-top: 12px; font-size: 15px; }
+  .B .card .pr { margin-top: 4px; font-size: 15px; font-weight: 600; }
+  .B .card .pr s { color: #a0968a; font-weight: 400; margin-left: 6px; }
+
+  /* ---------- C: Bold modern ---------- */
+  .C { background: #fff; font-family: Inter, sans-serif; color: #0a0a0a; }
+  .C header { padding: 16px 32px; gap: 28px; }
+  .C .logo { font-weight: 600; font-size: 17px; letter-spacing: -.01em; }
+  .C .search { flex: 1; max-width: 480px; background: #f2f2f4; border-radius: 999px; padding: 10px 18px; color: #8a8a8e; font-size: 14px; }
+  .C .icons { margin-left: auto; gap: 20px; font-size: 13px; }
+  .C nav { padding: 6px 32px 14px; gap: 8px; font-size: 14px; }
+  .C nav a { padding: 7px 14px; border-radius: 999px; background: #f2f2f4; color: #3a3a3c; }
+  .C nav a.on { background: #0a0a0a; color: #fff; }
+  .C .hero { margin: 8px 32px 0; border-radius: 24px; background: #f2f2f4; padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+  .C h1 { font-size: 54px; line-height: 1.02; font-weight: 600; letter-spacing: -.035em; }
+  .C .lead { margin-top: 16px; font-size: 17px; line-height: 1.55; color: #515154; max-width: 420px; }
+  .C .btn { display: inline-block; padding: 13px 22px; border-radius: 999px; font-size: 15px; font-weight: 500; }
+  .C .btn.p { background: #0a0a0a; color: #fff; }
+  .C .btn.s { color: #0066cc; margin-left: 8px; }
+  .C .heroimg { height: 320px; border-radius: 18px; overflow: hidden; }
+  .C .sec { padding: 40px 32px; }
+  .C h2 { font-size: 28px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: baseline; }
+  .C h2 a { font-size: 15px; font-weight: 500; color: #0066cc; }
+  .C .cats { gap: 14px; }
+  .C .cat { flex: 1; text-align: center; font-size: 13px; font-weight: 500; }
+  .C .cat i { display: block; aspect-ratio: 1; border-radius: 18px; overflow: hidden; margin-bottom: 8px; background: #f2f2f4; }
+  .C .grid4 { gap: 16px; }
+  .C .card { background: #f5f5f7; border-radius: 18px; padding: 14px; }
+  .C .card .ph { aspect-ratio: 1; border-radius: 12px; overflow: hidden; position: relative; }
+  .C .card .tag { position: absolute; top: 10px; left: 10px; background: #0a0a0a; color: #fff; font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 999px; }
+  .C .card .nm { margin-top: 12px; font-size: 15px; font-weight: 500; }
+  .C .card .pr { margin-top: 2px; font-size: 15px; color: #3a3a3c; }
+  .C .card .pr s { color: #8a8a8e; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<h1 class="board-title">Vindhyan Studio style board</h1>
+<p class="board-sub">Three directions for the same home page, using your real products. Pick one (or mix: "A layout with B fonts"). Whatever you choose, the cleanup underneath is the same: fewer boxes and borders, one consistent corner radius, aligned category row, shorter text, and calmer badges.</p>
+
+<!-- ================= A ================= -->
+<section class="dir">
+  <div class="dir-label"><b>A · Clean retail</b><span>Like Razorpay, Stripe, Flipkart's newer pages. Neutral, trustworthy, information-first.</span></div>
+  <div class="frame A">
+    <div class="bar">Free shipping above ₹999 · Cash on delivery available</div>
+    <header class="row">
+      <div class="logo">VINDHYAN STUDIO</div>
+      <div class="search hide-sm">Search keychains, idols, lamps</div>
+      <div class="row icons"><span class="hide-sm">Track order</span><span>Account</span><span>Cart (2)</span></div>
+    </header>
+    <nav class="row hide-sm"><a class="on">All</a><a>Keychains</a><a>Idols</a><a>Toys</a><a>Lamps</a><a>Necklaces</a><a>Gifts</a><a>Home decor</a><a>More ▾</a></nav>
+    <div class="hero hero-grid">
+      <div>
+        <h1>Personalised 3D printed gifts, made in India</h1>
+        <p class="lead">Keychains with your name, idols, lamps and décor. Printed to order in Gorakhpur and delivered across India.</p>
+        <div style="margin-top:24px"><a class="btn p">Design a keychain</a><a class="btn s">Shop all</a></div>
+      </div>
+      <div class="heroimg"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-034/34.jpg" alt=""></div>
+    </div>
+    <div class="sec">
+      <h2>Shop by category <a>View all</a></h2>
+      <div class="row cats" style="flex-wrap:wrap">
+        <div class="row cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-013/13.jpg" alt=""></i>Keychains</div>
+        <div class="row cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-021/21.jpg" alt=""></i>Idols</div>
+        <div class="row cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-031/31.jpg" alt=""></i>Toys</div>
+        <div class="row cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-035/35.jpg" alt=""></i>Lamps</div>
+        <div class="row cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-017/17.jpg" alt=""></i>Necklaces</div>
+      </div>
+    </div>
+    <div class="sec">
+      <h2>Bestsellers <a>View all</a></h2>
+      <div class="grid4">
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-021/21.jpg" alt=""><span class="tag">37% off</span></div><div class="nm">Baby Hanuman with Gada</div><div class="pr">₹156<s>₹249</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-078/78.jpg" alt=""><span class="tag">Personalise</span></div><div class="nm">Camera keychain with photo</div><div class="pr">₹79<s>₹99</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-035/35.jpg" alt=""></div><div class="nm">Wavy lamp</div><div class="pr">₹299<s>₹399</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-022/22.jpg" alt=""></div><div class="nm">Krishna ji with flute</div><div class="pr">₹249<s>₹349</s></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <div><b>Feel</b>Professional, quick to scan, nothing distracting. Safest for Razorpay review and first-time buyers.</div>
+    <div><b>Type</b>Inter, one sans-serif. Bold only for prices and headings.</div>
+    <div><b>Colour</b>White, light grey, charcoal buttons. Gold only on discount tags.</div>
+    <div><b>Shapes</b>8–10px corners everywhere, thin grey hairlines, no shadows.</div>
+  </div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="dir">
+  <div class="dir-label"><b>B · Warm boutique</b><span>Like premium Indian D2C gift and décor brands. Crafted, editorial, giftable.</span></div>
+  <div class="frame B">
+    <div class="bar">Free shipping above ₹999 · Handmade to order in India</div>
+    <header class="row">
+      <div class="logo">Vindhyan<small>STUDIO</small></div>
+      <div class="search hide-sm">Search the studio</div>
+      <div class="row icons"><span class="hide-sm">Track order</span><span>Account</span><span>Bag (2)</span></div>
+    </header>
+    <nav class="row hide-sm"><a class="on">Shop all</a><a>Keychains</a><a>Idols</a><a>Toys</a><a>Lamps</a><a>Gifts</a><a>Décor</a></nav>
+    <div class="hero hero-grid">
+      <div>
+        <div class="eyebrow">Your idea, our creation</div>
+        <h1>Gifts printed just for you</h1>
+        <p class="lead">Every piece is 3D printed to order and finished by hand in our Gorakhpur studio.</p>
+        <div style="margin-top:28px"><a class="btn p">Design a keychain</a><a class="btn s">Shop all</a></div>
+      </div>
+      <div class="heroimg"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-022/22.jpg" alt=""></div>
+    </div>
+    <div class="sec">
+      <h2>Shop by category <a>View all</a></h2>
+      <div class="row cats">
+        <div class="cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-013/13.jpg" alt=""></i>Keychains</div>
+        <div class="cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-021/21.jpg" alt=""></i>Idols</div>
+        <div class="cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-035/35.jpg" alt=""></i>Lamps</div>
+        <div class="cat hide-sm"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-031/31.jpg" alt=""></i>Toys</div>
+        <div class="cat hide-sm"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-017/17.jpg" alt=""></i>Necklaces</div>
+      </div>
+    </div>
+    <div class="sec">
+      <h2>Bestsellers <a>View all</a></h2>
+      <div class="grid4">
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-021/21.jpg" alt=""><span class="tag">Sale</span></div><div class="nm">Baby Hanuman with Gada</div><div class="pr">₹156<s>₹249</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-078/78.jpg" alt=""><span class="tag">Personalise</span></div><div class="nm">Camera keychain with photo</div><div class="pr">₹79<s>₹99</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-034/34.jpg" alt=""></div><div class="nm">Hanging lamp</div><div class="pr">₹399<s>₹449</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-023/23.jpg" alt=""></div><div class="nm">Edge-sitting Baby Krishna</div><div class="pr">₹99<s>₹149</s></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <div><b>Feel</b>Premium and gift-worthy. Feels like a small brand with a design team. Best match for idols, décor and gifting.</div>
+    <div><b>Type</b>Fraunces serif for headings, Manrope for text. Small uppercase labels.</div>
+    <div><b>Colour</b>Warm off-white, deep brown-charcoal, gold accent from your logo.</div>
+    <div><b>Shapes</b>Square corners, almost no borders, taller 4:5 photos.</div>
+  </div>
+</section>
+
+<!-- ================= C ================= -->
+<section class="dir">
+  <div class="dir-label"><b>C · Bold modern</b><span>Like Apple, Nothing, boAt. Big type, soft grey tiles, rounded pills.</span></div>
+  <div class="frame C">
+    <header class="row">
+      <div class="logo">Vindhyan Studio</div>
+      <div class="search hide-sm">Search products</div>
+      <div class="row icons"><span class="hide-sm">Track order</span><span>Account</span><span>Cart (2)</span></div>
+    </header>
+    <nav class="row hide-sm"><a class="on">All</a><a>Keychains</a><a>Idols</a><a>Toys</a><a>Lamps</a><a>Necklaces</a><a>Gifts</a></nav>
+    <div class="hero hero-grid">
+      <div>
+        <h1>Your name.<br>Printed in 3D.</h1>
+        <p class="lead">Custom keychains, idols and lamps, made to order and shipped across India.</p>
+        <div style="margin-top:26px"><a class="btn p">Design yours</a><a class="btn s">Shop all ›</a></div>
+      </div>
+      <div class="heroimg"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-013/13.jpg" alt=""></div>
+    </div>
+    <div class="sec">
+      <h2>Shop by category <a>View all ›</a></h2>
+      <div class="row cats">
+        <div class="cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-013/13.jpg" alt=""></i>Keychains</div>
+        <div class="cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-021/21.jpg" alt=""></i>Idols</div>
+        <div class="cat"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-035/35.jpg" alt=""></i>Lamps</div>
+        <div class="cat hide-sm"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-031/31.jpg" alt=""></i>Toys</div>
+        <div class="cat hide-sm"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-017/17.jpg" alt=""></i>Necklaces</div>
+        <div class="cat hide-sm"><i><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-008/8.jpg" alt=""></i>Gifts</div>
+      </div>
+    </div>
+    <div class="sec" style="padding-top:0">
+      <h2>Bestsellers <a>View all ›</a></h2>
+      <div class="grid4">
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-021/21.jpg" alt=""><span class="tag">−37%</span></div><div class="nm">Baby Hanuman with Gada</div><div class="pr">₹156<s>₹249</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-078/78.jpg" alt=""></div><div class="nm">Camera keychain</div><div class="pr">₹79<s>₹99</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-035/35.jpg" alt=""></div><div class="nm">Wavy lamp</div><div class="pr">₹299<s>₹399</s></div></div>
+        <div class="card"><div class="ph"><img src="https://udozexopfprxbxfzglyr.supabase.co/storage/v1/object/public/catalogue/products/VS-009/9.jpg" alt=""></div><div class="nm">Flexy octopus</div><div class="pr">₹80<s>₹149</s></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <div><b>Feel</b>Young, confident, techy. Great for keychains, toys and fidgets; less traditional for idols.</div>
+    <div><b>Type</b>Inter, large and tight headings.</div>
+    <div><b>Colour</b>Pure white with soft grey tiles, black buttons, blue text links.</div>
+    <div><b>Shapes</b>Very rounded (18–24px), pill buttons and category chips.</div>
+  </div>
+</section>
+
+</body>
+</html>

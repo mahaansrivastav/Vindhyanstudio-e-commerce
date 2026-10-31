@@ -15,7 +15,7 @@ export function Account() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">My account</h1>
+        <h1 className="text-3xl font-semibold">My account</h1>
         <button className="btn-ghost text-sm" onClick={signOut}>Log out</button>
       </div>
       <nav className="flex gap-1 overflow-x-auto border-b border-line pb-2">

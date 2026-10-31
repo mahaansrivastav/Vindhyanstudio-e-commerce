@@ -97,30 +97,27 @@ export function Policy() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-brand-soft px-6 py-8 sm:px-10">
-        <p className="text-xs font-bold uppercase tracking-widest text-accent">Policies</p>
+      <div className="border-b border-line pb-6 pt-2">
+        <p className="text-sm text-muted">Policies</p>
         <h1 className="mt-1 text-3xl sm:text-4xl">{p.title}</h1>
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_1fr] lg:gap-14">
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-36 lg:self-start">
-          <nav className="card flex gap-1 overflow-x-auto p-2 scrollbar-none lg:flex-col" aria-label="Policies">
+          <nav className="flex gap-1 overflow-x-auto scrollbar-none lg:flex-col" aria-label="Policies">
             {NAV.map(([s, label]) => (
               <NavLink key={s} to={`/policies/${s}`}
-                       className={({ isActive }) => `shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-surface'}`}>
+                       className={({ isActive }) => `shrink-0 rounded-lg px-3 py-2 text-sm ${isActive ? 'bg-surface font-medium text-ink' : 'text-ink/70 hover:text-ink'}`}>
                 {label}
               </NavLink>
             ))}
           </nav>
-          <div className="card hidden p-6 lg:block">
-            <img src="/brand/logo-full.png" alt="Vindhyan Studio" className="mx-auto w-40" />
-          </div>
         </aside>
-        <article className="card min-w-0 p-6 sm:p-10">
+        <article className="min-w-0 max-w-3xl">
           {p.intro && <p className="text-base leading-relaxed text-ink/80">{p.intro}</p>}
           <div className="mt-2 space-y-6">
             {p.sections.map((s, i) => (
               <section key={i}>
-                {s.h && <h2 className="font-sans text-lg font-bold">{s.h}</h2>}
+                {s.h && <h2 className="text-lg">{s.h}</h2>}
                 <p className="mt-1.5 leading-relaxed text-ink/80">{s.body}</p>
               </section>
             ))}
