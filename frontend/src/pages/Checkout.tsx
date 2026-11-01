@@ -128,10 +128,15 @@ export function Checkout() {
           <Row label="Total" value={quote ? rupees(quote.total) : '…'} bold />
         </div>
         {err && <p className="text-sm text-bad" role="alert">{err}</p>}
+        {/* Explicit, un-ticked agreement next to the button (Consumer Protection (E-Commerce) Rules, 2020). */}
+        <p className="text-xs leading-relaxed text-muted">
+          By placing this order you agree to our <Link to="/policies/terms" className="underline">Terms of use</Link>,{' '}
+          <Link to="/policies/privacy" className="underline">Privacy policy</Link> and{' '}
+          <Link to="/policies/refund" className="underline">Returns &amp; refunds policy</Link>.
+        </p>
         <button className="btn-primary w-full py-3" disabled={busy || !quote?.valid || !addressId || showForm} onClick={place}>
           {busy ? 'Placing order…' : mode === 'COD' ? 'Place order' : 'Continue to payment'}
         </button>
-        <p className="text-center text-xs text-muted">By placing the order you agree to our <Link to="/policies/terms" className="underline">terms</Link>.</p>
       </aside>
     </div>
   )

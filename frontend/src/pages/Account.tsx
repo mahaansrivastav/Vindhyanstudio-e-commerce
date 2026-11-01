@@ -171,7 +171,7 @@ function AddressesTab() {
   return (
     <Section title="Addresses" action={editing !== 'new' && <button className="btn-outline" onClick={() => setEditing('new')}>+ Add address</button>}>
     <div className="grid gap-3 md:grid-cols-2">
-      {data?.map((a) => (
+      {[...(data ?? [])].sort((x, y) => Number(y.isDefault) - Number(x.isDefault)).map((a) => (
         editing !== 'new' && editing?.id === a.id ? (
           <div key={a.id} className="card p-5 md:col-span-2">
             <AddressForm initial={a} onCancel={() => setEditing(null)}
@@ -183,8 +183,13 @@ function AddressesTab() {
               <p className="font-medium">{a.name} {a.isDefault && <span className="ml-1 rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium text-muted">Default</span>}</p>
               <p className="mt-1 leading-relaxed text-muted">{a.line1}{a.line2 ? `, ${a.line2}` : ''}<br />{a.city}, {a.state} – {a.pincode}<br />+91 {a.phone}</p>
             </div>
-            <div className="flex gap-4 border-t border-line pt-3">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-line pt-3">
               <button className="font-medium underline underline-offset-2" onClick={() => setEditing(a)}>Edit</button>
+              {!a.isDefault && (
+                <button className="text-ink/70 hover:text-ink" onClick={async () => { await api(`/api/me/addresses/${a.id}`, { method: 'PUT', body: { ...a, isDefault: true } }); reload() }}>
+                  Set as default
+                </button>
+              )}
               <button className="text-muted hover:text-bad" onClick={async () => { if (confirm('Delete this address?')) { await api(`/api/me/addresses/${a.id}`, { method: 'DELETE' }); reload() } }}>Delete</button>
             </div>
           </div>
