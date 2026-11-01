@@ -129,10 +129,16 @@ def main():
     dump = os.path.join(tempfile.mkdtemp(), "vindhyan.dump")
     subprocess.run(["pg_dump", "--schema=public", "--no-owner", "--no-privileges", "-Fc", "-f", dump],
                    env={**os.environ, **old["pg"]}, check=True)
-    restore = ["pg_restore", "--no-owner", "--no-privileges", "--exit-on-error", "-d", new["pg"]["PGDATABASE"]]
+    # Every Supabase project already has the public schema (and its comment), so skip creating those.
+    toc = subprocess.run(["pg_restore", "-l", dump], capture_output=True, text=True, check=True).stdout
+    keep = [l for l in toc.splitlines() if not (" SCHEMA - public " in l or " COMMENT - SCHEMA public " in l)]
+    listing = dump + ".list"
+    open(listing, "w").write("\n".join(keep) + "\n")
+    restore = ["pg_restore", "--no-owner", "--no-privileges", "--exit-on-error", "--single-transaction", "-L", listing, "-d", new["pg"]["PGDATABASE"]]
     if force:
         restore[1:1] = ["--clean", "--if-exists"]
     subprocess.run(restore + [dump], env={**os.environ, **new["pg"]}, check=True)
+    os.remove(listing)
     os.remove(dump)
 
     # 2. Storage
