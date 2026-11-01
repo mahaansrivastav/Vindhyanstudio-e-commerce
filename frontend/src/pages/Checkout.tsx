@@ -97,10 +97,13 @@ export function Checkout() {
               <input type="radio" name="mode" checked={mode === 'ONLINE'} disabled={onlineOff} onChange={() => setMode('ONLINE')} />
               <span><b>Pay online</b><br /><span className="text-muted">{onlineOff ? 'Coming soon' : 'UPI, cards, netbanking, wallets'}</span></span>
             </label>
-            <label className={`flex gap-3 rounded-xl border p-3 ${quote?.codAvailable ? 'cursor-pointer' : 'opacity-50'} ${mode === 'COD' ? 'border-brand bg-brand-soft' : 'border-line'}`}>
-              <input type="radio" name="mode" checked={mode === 'COD'} disabled={!quote?.codAvailable} onChange={() => setMode('COD')} />
-              <span><b>Cash on delivery</b><br /><span className="text-muted">{quote?.codAvailable ? 'Pay when your parcel arrives' : 'Not available for this order'}</span></span>
-            </label>
+            {/* Prepaid first: cash on delivery appears only when it's allowed for this order. */}
+            {quote?.codAvailable && (
+              <label className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${mode === 'COD' ? 'border-brand bg-brand-soft' : 'border-line'}`}>
+                <input type="radio" name="mode" checked={mode === 'COD'} onChange={() => setMode('COD')} />
+                <span><b>Cash on delivery</b><br /><span className="text-muted">Pay when your parcel arrives</span></span>
+              </label>
+            )}
           </div>
         </section>
       </div>

@@ -237,7 +237,7 @@ export function Product() {
           <div className="divide-y divide-line rounded-xl border border-line">
             <div className="p-4"><PincodeCheck leadDays={madeToOrder ? p.leadTimeDays : 1} /></div>
             <InfoRow icon={<IconTruck className="h-5 w-5" />}>Free shipping above ₹{config?.freeShippingAbove ?? 999}, with tracking on every order</InfoRow>
-            <InfoRow icon={<IconShield className="h-5 w-5" />}>Pay by UPI, card or net banking{config?.codEnabled ? ', or cash on delivery' : ''}</InfoRow>
+            <InfoRow icon={<IconShield className="h-5 w-5" />}>Pay securely by UPI, card or net banking</InfoRow>
             {config?.whatsapp && (
               <InfoRow icon={<IconChat />}>
                 Need a custom size or colour?{' '}

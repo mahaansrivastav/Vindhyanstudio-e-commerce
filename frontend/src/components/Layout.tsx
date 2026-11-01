@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from
 import { api } from '../lib/api'
 import type { CategoryDto } from '../lib/types'
 import { useAuth, useCart, useConfig, useWishlist } from '../state/AppState'
+import { Avatar } from './Avatar'
 import { Spinner } from './ui'
 import { IconBox, IconCart, IconHeart, IconPencil, IconSearch, IconShield, IconTruck, IconUser } from './Icons'
 
@@ -37,7 +38,7 @@ export function Layout() {
       <div className="bg-ink px-4 py-1.5 text-center text-[12px] text-white/80">
         {config?.paymentProvider === 'mock'
           ? 'Test mode: payments, shipping and messages are simulated.'
-          : <>Free shipping over ₹{config?.freeShippingAbove ?? 999}{config?.codEnabled ? ' · Cash on delivery' : ''}</>}
+          : <>Free shipping on orders over ₹{config?.freeShippingAbove ?? 999}</>}
       </div>
 
       <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur-md">
@@ -56,10 +57,9 @@ export function Layout() {
           </form>
           <nav className="flex shrink-0 items-center gap-0.5 text-sm font-semibold sm:gap-1">
             <HeaderLink to={profile ? '/account/orders' : '/login?next=/account/orders'} label="Track order" icon={<IconTruck />} className="hidden lg:flex" />
-            <HeaderLink to="/wishlist" label="Wishlist" icon={<IconHeart />} count={wish.items.length} />
-            <HeaderLink to={profile ? '/account' : '/login'} label={profile ? 'Account' : 'Sign in'} icon={<IconUser />} />
+            <HeaderLink to={profile ? '/account/wishlist' : '/wishlist'} label="Wishlist" icon={<IconHeart />} count={wish.items.length} />
             <HeaderLink to="/cart" label="Cart" icon={<IconCart />} count={cart.count} />
-            {profile?.admin && <NavLink to="/admin" className="btn-outline ml-1 px-3 py-1.5 text-xs">Admin</NavLink>}
+            {profile ? <ProfileMenu /> : <HeaderLink to="/login" label="Sign in" icon={<IconUser />} />}
           </nav>
         </div>
         {cats.length > 0 && (
@@ -93,7 +93,7 @@ export function Layout() {
             {[
               [<IconPencil key="a" className="h-5 w-5" />, 'Made to order in India'],
               [<IconTruck key="b" className="h-5 w-5" />, `Free shipping above ₹${config?.freeShippingAbove ?? 999}`],
-              [<IconBox key="c" className="h-5 w-5" />, 'Cash on delivery'],
+              [<IconBox key="c" className="h-5 w-5" />, 'Quality checked by hand'],
               [<IconShield key="d" className="h-5 w-5" />, 'Secure payments'],
             ].map(([icon, text]) => (
               <li key={text as string} className="flex items-center gap-2.5 text-ink/80">
@@ -197,6 +197,54 @@ function MoreMenu({ cats, active }: { cats: CategoryDto[]; active: boolean }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ProfileMenu() {
+  const { profile, signOut } = useAuth()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const loc = useLocation()
+  const nav = useNavigate()
+  useEffect(() => { setOpen(false) }, [loc.pathname])
+  useEffect(() => {
+    if (!open) return
+    const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc) }
+  }, [open])
+  if (!profile) return null
+  const links: [string, string][] = [['/account/orders', 'My orders'], ['/account/wishlist', 'Wishlist'], ['/account/addresses', 'Addresses'], ['/account', 'Account settings']]
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" aria-label="Account menu"
+              className="flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 text-ink hover:text-brand sm:px-2.5">
+        <Avatar name={profile.name} size="sm" />
+        <span className="hidden text-[11px] md:block">Account</span>
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 z-40 mt-2 w-64 overflow-hidden rounded-xl border border-line bg-white shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
+          <div className="flex items-center gap-3 border-b border-line p-4">
+            <Avatar name={profile.name} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{profile.name || 'Welcome'}</p>
+              <p className="truncate text-xs text-muted">{profile.email ?? (profile.phone ? `+91 ${profile.phone}` : '')}</p>
+            </div>
+          </div>
+          <div className="p-1.5">
+            {links.map(([to, label]) => (
+              <Link key={to} to={to} role="menuitem" className="block rounded-lg px-3 py-2 text-sm text-ink/80 hover:bg-surface hover:text-ink">{label}</Link>
+            ))}
+            {profile.admin && <Link to="/admin" role="menuitem" className="block rounded-lg px-3 py-2 text-sm text-ink/80 hover:bg-surface hover:text-ink">Admin console</Link>}
+          </div>
+          <div className="border-t border-line p-1.5">
+            <button role="menuitem" onClick={() => { signOut(); setOpen(false); nav('/') }} className="w-full rounded-lg px-3 py-2 text-left text-sm text-ink/80 hover:bg-surface hover:text-bad">Sign out</button>
+          </div>
         </div>
       )}
     </div>

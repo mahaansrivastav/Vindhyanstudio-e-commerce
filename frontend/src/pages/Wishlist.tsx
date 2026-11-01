@@ -1,29 +1,40 @@
 // Copyright (c) 2026 Mahan Srivastava. All rights reserved.
 // Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Empty, ProductImage } from '../components/ui'
 import { rupees } from '../lib/format'
-import { useWishlist } from '../state/AppState'
+import { useAuth, useWishlist } from '../state/AppState'
 
+/** Guests see the wishlist here; signed-in customers see it inside their account. */
 export function Wishlist() {
-  const wish = useWishlist()
-  if (!wish.items.length) return <Empty title="Your wishlist is empty">Tap ♡ on any product to save it here.</Empty>
+  const { profile } = useAuth()
+  if (profile) return <Navigate to="/account/wishlist" replace />
   return (
-    <div>
-      <h1 className="text-3xl font-semibold">Wishlist</h1>
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {wish.items.map((w) => (
-          <div key={w.sku} className="space-y-2">
-            <Link to={`/p/${w.slug}`}><ProductImage src={w.image} alt={w.name} className="aspect-square w-full rounded-xl" /></Link>
-            <p className="text-sm font-semibold">{w.name}</p>
-            <p className="text-sm">{rupees(w.price)}</p>
-            <div className="flex gap-2">
-              <Link to={`/p/${w.slug}`} className="btn-primary flex-1 py-1.5">View</Link>
-              <button className="btn-ghost py-1.5" onClick={() => wish.toggle(w)}>Remove</button>
-            </div>
+    <div className="space-y-5 pt-2">
+      <h1 className="text-3xl">Wishlist</h1>
+      <WishlistGrid />
+    </div>
+  )
+}
+
+export function WishlistGrid() {
+  const wish = useWishlist()
+  if (!wish.items.length) return <Empty title="Your wishlist is empty"><p>Tap ♡ on any product to save it here.</p><Link to="/shop" className="btn-primary mt-4">Browse products</Link></Empty>
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
+      {wish.items.map((w) => (
+        <div key={w.sku} className="group">
+          <Link to={`/p/${w.slug}`} className="block overflow-hidden rounded-xl bg-surface">
+            <ProductImage src={w.image} alt={w.name} className="aspect-square w-full transition duration-500 group-hover:scale-[1.03]" />
+          </Link>
+          <p className="mt-3 line-clamp-2 text-[15px] leading-snug">{w.name}</p>
+          <p className="mt-1 font-semibold">{rupees(w.price)}</p>
+          <div className="mt-2 flex gap-2">
+            <Link to={`/p/${w.slug}`} className="btn-primary flex-1 py-2">View</Link>
+            <button className="btn-outline py-2" onClick={() => wish.toggle(w)} aria-label={`Remove ${w.name}`}>Remove</button>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   )
 }

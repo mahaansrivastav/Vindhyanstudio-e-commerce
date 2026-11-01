@@ -42,7 +42,6 @@ export function PincodeCheck({ leadDays = 0 }: { leadDays?: number }) {
         <p className="text-sm text-ok">
           ✓ Delivers to {res.pincode}
           {res.expectedBy && <> by <b>{new Date(res.expectedBy).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</b></>}
-          {!res.codAvailable && <span className="text-muted"> · COD not available</span>}
         </p>
       ) : (
         <p className="text-sm text-bad">Sorry, we don't deliver to {res.pincode} yet.</p>
