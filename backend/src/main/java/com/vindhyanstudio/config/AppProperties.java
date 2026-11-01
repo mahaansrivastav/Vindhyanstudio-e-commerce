@@ -22,6 +22,7 @@ public record AppProperties(
         Catalogue catalogue,
         Storage storage,
         Pricing pricing,
+        Analytics analytics,
         Payment payment,
         Shipping shipping,
         Notifications notifications) {
@@ -32,11 +33,21 @@ public record AppProperties(
 
     public record Seller(String name, String legalName, String address, String state, String gstin, String email, String phone, String whatsapp, String defaultHsn) {}
 
-    public record Admin(String identities) {
+    public record Admin(String identities, String developers, String analysts) {
         public List<String> identityList() {
             return split(identities).stream().map(String::toLowerCase).toList();
         }
+
+        public List<String> developerList() {
+            return split(developers).stream().map(String::toLowerCase).toList();
+        }
+
+        public List<String> analystList() {
+            return split(analysts).stream().map(String::toLowerCase).toList();
+        }
     }
+
+    public record Analytics(int retentionDays) {}
 
     public record Auth(String jwtSecret, int tokenTtlHours, int otpLength, int otpTtlSeconds,
                        int otpResendSeconds, int otpMaxAttempts, boolean exposeOtp) {}

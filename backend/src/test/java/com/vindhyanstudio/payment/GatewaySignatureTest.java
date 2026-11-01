@@ -22,7 +22,7 @@ import com.vindhyanstudio.config.AppProperties;
 class GatewaySignatureTest {
 
     private static AppProperties props(AppProperties.Payment payment) {
-        return new AppProperties(null, null, null, null, null, null, null, null, null, payment, null, null);
+        return new AppProperties(null, null, null, null, null, null, null, null, null, null, payment, null, null);
     }
 
     private static byte[] hmac(String data, String secret) throws Exception {

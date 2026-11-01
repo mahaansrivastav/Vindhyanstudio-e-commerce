@@ -29,7 +29,7 @@ public class ProfileController {
         this.addresses = addresses;
     }
 
-    public record ProfileDto(Long id, String name, String email, String phone, boolean admin) {}
+    public record ProfileDto(Long id, String name, String email, String phone, boolean admin, boolean analytics, boolean developer) {}
 
     public record ProfileUpdate(@Size(max = 120) String name) {}
 
@@ -53,7 +53,8 @@ public class ProfileController {
     @GetMapping
     ProfileDto me() {
         Customer c = customers.findById(CurrentUser.id()).orElseThrow(() -> ApiException.notFound("Account not found"));
-        return new ProfileDto(c.getId(), c.getName(), c.getEmail(), c.getPhone(), CurrentUser.isAdmin());
+        return new ProfileDto(c.getId(), c.getName(), c.getEmail(), c.getPhone(), CurrentUser.isAdmin(),
+                CurrentUser.hasRole("ANALYTICS"), CurrentUser.hasRole("DEVELOPER"));
     }
 
     @PutMapping

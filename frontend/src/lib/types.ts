@@ -50,7 +50,7 @@ export interface Quote {
   lines: QuoteLine[]; subtotal: number; shippingFee: number; total: number; codAvailable: boolean; valid: boolean
 }
 
-export interface Profile { id: number; name: string | null; email: string | null; phone: string | null; admin: boolean }
+export interface Profile { id: number; name: string | null; email: string | null; phone: string | null; admin: boolean; analytics?: boolean; developer?: boolean }
 
 export interface Address {
   id?: number; name: string; phone: string; line1: string; line2?: string | null
@@ -128,3 +128,19 @@ export interface ImportRow {
 export interface ImportPreview {
   newCount: number; updateCount: number; sameCount: number; errorCount: number; newCategories: string[]; rows: ImportRow[]
 }
+
+export interface UsageKpis {
+  views: number; visitors: number; sessions: number; signedInVisitors: number; logins: number; failedLogins: number
+  signups: number; orders: number; revenue: number; conversion: number
+}
+export interface Count { name: string; count: number }
+export interface UsageOverview {
+  from: string; to: string; kpis: UsageKpis; previous: UsageKpis
+  series: { date: string; label: string; views: number; visitors: number }[]
+  pages: { path: string; views: number; visitors: number }[]
+  products: { sku: string; name: string | null; image: string | null; views: number; visitors: number; ordered: number }[]
+  sources: Count[]; devices: Count[]; browsers: Count[]; os: Count[]; regions: Count[]; languages: Count[]; hours: number[]; areas: Count[]
+}
+export interface LoginEvent { at: string; identity: string; name: string | null; method: string; success: boolean; newAccount: boolean; reason: string | null; ip: string | null; device: string; browser: string; os: string }
+export interface VisitorRow { visitor: string; firstSeen: string; lastSeen: string; views: number; sessions: number; ip: string | null; device: string; browser: string; customer: string | null; source: string | null; timezone: string | null }
+export interface VisitRow { at: string; path: string; area: string; source: string | null; ip: string | null; device: string; browser: string; os: string; customer: string | null; visitor: string; timezone: string | null }

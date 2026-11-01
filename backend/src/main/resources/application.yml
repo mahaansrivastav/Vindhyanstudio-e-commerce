@@ -64,6 +64,14 @@ app:
   admin:
     # Comma-separated emails / phone numbers that get the ADMIN role on login.
     identities: ${ADMIN_IDENTITIES:admin@vindhyanstudio.local}
+    # Platform owner: full usage analytics, login history with IPs, exports (/dev). Not shown to anyone else.
+    developers: ${DEVELOPER_IDENTITIES:}
+    # Read-only analytics (aggregates only, no IPs or emails). For future partners / staff.
+    analysts: ${ANALYTICS_IDENTITIES:}
+
+  analytics:
+    # Raw page views and logins are deleted after this many days (personal data: keep only what's needed).
+    retention-days: ${ANALYTICS_RETENTION_DAYS:180}
 
   auth:
     jwt-secret: ${JWT_SECRET:change-me-local-only-secret-change-me-local-only}

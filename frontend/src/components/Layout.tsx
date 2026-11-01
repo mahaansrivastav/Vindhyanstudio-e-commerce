@@ -244,6 +244,7 @@ function ProfileMenu() {
               <Link key={to} to={to} role="menuitem" className="block rounded-lg px-3 py-2 text-sm text-ink/80 hover:bg-surface hover:text-ink">{label}</Link>
             ))}
             {profile.admin && <Link to="/admin" role="menuitem" className="block rounded-lg px-3 py-2 text-sm text-ink/80 hover:bg-surface hover:text-ink">Admin console</Link>}
+            {(profile.developer || profile.analytics) && <Link to="/dev" role="menuitem" className="block rounded-lg px-3 py-2 text-sm text-ink/80 hover:bg-surface hover:text-ink">{profile.developer ? 'Developer console' : 'Analytics'}</Link>}
           </div>
           <div className="border-t border-line p-1.5">
             <button role="menuitem" onClick={() => { signOut(); setOpen(false); nav('/') }} className="w-full rounded-lg px-3 py-2 text-left text-sm text-ink/80 hover:bg-surface hover:text-bad">Sign out</button>

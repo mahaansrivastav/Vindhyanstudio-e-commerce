@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { Empty, RequireAuth, Spinner } from './components/ui'
+import { PageTracker } from './lib/track'
 import { Home } from './pages/Home'
 import { AppStateProvider } from './state/AppState'
 import { PaymentProvider } from './state/Payments'
@@ -22,15 +23,18 @@ const Pay = page(() => import('./pages/Pay'), 'Pay')
 const OrderDetail = page(() => import('./pages/OrderDetail'), 'OrderDetail')
 const Account = page(() => import('./pages/Account'), 'Account')
 const Admin = page(() => import('./admin/Admin'), 'Admin')
+const Dev = page(() => import('./dev/Dev'), 'Dev')
 
 export default function App() {
   return (
     <AppStateProvider>
       <PaymentProvider>
         <BrowserRouter>
+          <PageTracker />
           <Suspense fallback={<Spinner label="" />}>
             <Routes>
               <Route path="admin/*" element={<RequireAuth admin><Admin /></RequireAuth>} />
+              <Route path="dev/*" element={<RequireAuth><Dev /></RequireAuth>} />
               <Route element={<Layout />}>
                 <Route index element={<Home />} />
                 <Route path="shop" element={<Shop />} />

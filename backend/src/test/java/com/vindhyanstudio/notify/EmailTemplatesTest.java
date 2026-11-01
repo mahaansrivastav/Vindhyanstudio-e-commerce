@@ -29,7 +29,7 @@ class EmailTemplatesTest {
     private final EmailTemplates t = new EmailTemplates(new AppProperties(null, "https://vindhyanstudio.in", null,
             new AppProperties.Seller("Vindhyan Studio", "MORVIN INTEGRATED SOLUTIONS", "Bhagatpuwa, Padari Bazar, Gorakhpur, Uttar Pradesh - 273014",
                     "Uttar Pradesh", "09RNWPS5738H1ZK", "vindhyanstudio@gmail.com", "+91 94559 38254", "919455938254", "3926"),
-            null, null, null, null, null, null, null, null));
+            null, null, null, null, null, null, null, null, null));
 
     private static OrderView order(PaymentMode mode) {
         var items = List.of(

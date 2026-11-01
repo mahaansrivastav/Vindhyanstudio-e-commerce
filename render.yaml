@@ -43,6 +43,7 @@ services:
       - { key: SUPABASE_PUBLIC_BUCKET, value: catalogue }
       - { key: SUPABASE_PRIVATE_BUCKET, value: private }
       # Email (Brevo HTTPS API; works on Render's free plan, unlike SMTP)
+      - { key: DEVELOPER_IDENTITIES, sync: false }
       - { key: NOTIFY_EMAIL, value: brevo }
       - { key: NOTIFY_FROM_EMAIL, sync: false }
       - { key: BREVO_API_KEY, sync: false }

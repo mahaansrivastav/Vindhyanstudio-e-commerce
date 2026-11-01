@@ -50,7 +50,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/catalogue/**", "/api/shipping/serviceability").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/cart/quote").permitAll()
                 .requestMatchers("/files/public/**", "/actuator/health", "/h2-console/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/t/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/analytics/**").hasAnyRole("ANALYTICS", "DEVELOPER")
+                .requestMatchers("/api/dev/**").hasRole("DEVELOPER")
                 .anyRequest().authenticated())
             .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthConverter())));
         return http.build();

@@ -30,8 +30,11 @@ public class AuthController {
     private final TokenService tokens;
     private final CustomerRepository customers;
     private final AppProperties props;
+    private final com.vindhyanstudio.analytics.TrackingService tracking;
 
-    public AuthController(OtpService otp, TokenService tokens, CustomerRepository customers, AppProperties props) {
+    public AuthController(OtpService otp, TokenService tokens, CustomerRepository customers, AppProperties props,
+                          com.vindhyanstudio.analytics.TrackingService tracking) {
+        this.tracking = tracking;
         this.otp = otp;
         this.tokens = tokens;
         this.customers = customers;
@@ -55,14 +58,22 @@ public class AuthController {
 
     @PostMapping("/api/auth/otp/verify")
     @Transactional
-    Map<String, Object> verify(@RequestBody OtpVerify body) {
+    Map<String, Object> verify(@RequestBody OtpVerify body, jakarta.servlet.http.HttpServletRequest req) {
         Identity id = Identity.parse(body.identity());
-        otp.verify(id, body.code());
+        try {
+            otp.verify(id, body.code());
+        } catch (ApiException e) {
+            tracking.login(id.value(), id.type().name(), false, false, find(id).map(Customer::getId).orElse(null), e.getMessage(), req);
+            throw e;
+        }
+        boolean[] created = {false};
         Customer c = find(id).orElseGet(() -> {
             Customer n = new Customer();
             if (id.type() == Identity.Type.EMAIL) n.setEmail(id.value()); else n.setPhone(id.value());
+            created[0] = true;
             return customers.save(n);
         });
+        tracking.login(id.value(), id.type().name(), true, created[0], c.getId(), null, req);
         return Map.of("token", tokens.issue(c), "admin", tokens.isAdmin(c));
     }
 

@@ -31,14 +31,29 @@ public class TokenService {
     }
 
     public boolean isAdmin(Customer c) {
-        List<String> admins = props.admin().identityList();
-        return (c.getEmail() != null && admins.contains(c.getEmail().toLowerCase()))
-                || (c.getPhone() != null && admins.contains(c.getPhone()));
+        return matches(c, props.admin().identityList());
+    }
+
+    /** Platform owner (DEVELOPER_IDENTITIES): usage analytics with personal data, login history, exports. */
+    public boolean isDeveloper(Customer c) {
+        return matches(c, props.admin().developerList());
+    }
+
+    /** Aggregate analytics only (ANALYTICS_IDENTITIES); developers have it too. */
+    public boolean isAnalyst(Customer c) {
+        return isDeveloper(c) || matches(c, props.admin().analystList());
+    }
+
+    private static boolean matches(Customer c, List<String> list) {
+        return (c.getEmail() != null && list.contains(c.getEmail().toLowerCase()))
+                || (c.getPhone() != null && list.contains(c.getPhone()));
     }
 
     public String issue(Customer c) {
         List<String> roles = new ArrayList<>(List.of("CUSTOMER"));
         if (isAdmin(c)) roles.add("ADMIN");
+        if (isAnalyst(c)) roles.add("ANALYTICS");
+        if (isDeveloper(c)) roles.add("DEVELOPER");
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("vindhyanstudio")

@@ -127,12 +127,16 @@ Last reviewed: November 2026
 | I-05 | Rotate secrets that were ever shared in chat / screenshots | ⬜ | P1 | Tech | DB passwords, service keys, Razorpay test secret |
 | I-06 | Uptime monitoring + error alerts | ⬜ | P2 | Tech | |
 | I-07 | Branded email templates | ✅ | — | Tech | Login code, confirmed, shipped, delivered, cancelled |
+| I-08 | First-party usage analytics + developer console (`/dev`, `DEVELOPER_IDENTITIES`) | ✅ | — | Tech | Page views, logins with IP, top products, sources, devices; Excel export; 180-day retention |
+| I-09 | City / state from IP address | ⬜ | P3 | Tech | Needs an IP-location database or service; time zone used for now |
+| I-10 | Read-only analytics access for partners (`ANALYTICS_IDENTITIES`) | 🟡 | P3 | Tech | Built (overview only); decide who gets it |
 
 ---
 
 ## Done log
 | Date | ID | Change |
 |---|---|---|
+| Nov 2026 | I-08 | Usage analytics and developer console; privacy policy updated (D-01) |
 | Nov 2026 | A-02 | "Set as default" for saved addresses |
 | Nov 2026 | C-06 | Clear agreement line (Terms, Privacy, Returns) above the checkout button |
 | Nov 2026 | A-03 | Account area with side menu; profile menu in header |

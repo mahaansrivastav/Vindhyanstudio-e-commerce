@@ -48,6 +48,7 @@ function pages(c: PublicConfig | null): Record<string, Page> {
       intro: 'We collect only what we need to make and deliver your order.',
       sections: [
         { h: 'What we collect', body: 'Your name, mobile number, email, delivery addresses, order history and the photos or text you upload for personalisation. Payment details are handled entirely by Razorpay.' },
+        { h: 'Usage and security data', body: 'When you use the site we record the pages you visit, your device and browser type, time zone, IP address and sign-in attempts. We use this only to keep accounts secure, prevent fraud and improve the site. It stays with us (no advertising trackers) and is deleted after 180 days.' },
         { h: 'How we use it', body: 'To produce and ship orders, send OTPs and order updates (SMS, WhatsApp or email), issue GST invoices, prevent fraud and answer your questions. We never sell your data.' },
         { h: 'Who we share it with', body: 'Only the services needed to fulfil your order: our payment gateway (Razorpay), shipping partner (Shiprocket and its couriers) and SMS/email providers.' },
         { h: 'Your photos', body: 'Uploaded photos are used only to make your product and are deleted 90 days after delivery unless you ask us to keep them for re-orders.' },

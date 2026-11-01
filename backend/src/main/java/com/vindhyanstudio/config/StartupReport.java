@@ -180,6 +180,9 @@ public class StartupReport {
         row(b, "Session length", p.auth().tokenTtlHours() + " hours");
         row(b, "JWT secret", DEFAULT_JWT.equals(p.auth().jwtSecret()) ? "DEFAULT (unsafe)" : "set");
         row(b, "Admins", String.join(", ", p.admin().identityList().stream().map(StartupReport::maskId).toList()));
+        row(b, "Developers", p.admin().developerList().isEmpty() ? "none (set DEVELOPER_IDENTITIES)" : String.join(", ", p.admin().developerList().stream().map(StartupReport::maskId).toList()));
+        row(b, "Analytics viewers", p.admin().analystList().isEmpty() ? "none" : String.join(", ", p.admin().analystList().stream().map(StartupReport::maskId).toList()));
+        row(b, "Usage tracking", "ON (page views + logins, kept " + p.analytics().retentionDays() + " days)");
         if (prod && p.auth().exposeOtp()) warn.add("OTP is shown on screen in production; anyone can log in as anyone.");
         if (prod && DEFAULT_JWT.equals(p.auth().jwtSecret())) warn.add("JWT_SECRET is the default; set a random value.");
         if (!emailReal && prod) warn.add("NOTIFY_EMAIL is 'console'; customers will not receive login codes.");
