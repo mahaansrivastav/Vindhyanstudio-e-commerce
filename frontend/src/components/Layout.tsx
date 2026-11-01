@@ -1,10 +1,11 @@
 // Copyright (c) 2026 Mahan Srivastava. All rights reserved.
 // Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { CategoryDto } from '../lib/types'
 import { useAuth, useCart, useConfig, useWishlist } from '../state/AppState'
+import { Spinner } from './ui'
 import { IconBox, IconCart, IconHeart, IconPencil, IconSearch, IconShield, IconTruck, IconUser } from './Icons'
 
 export function Layout() {
@@ -33,13 +34,13 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="bg-surface px-4 py-2 text-center text-xs text-ink/70">
+      <div className="bg-ink px-4 py-1.5 text-center text-[12px] text-white/80">
         {config?.paymentProvider === 'mock'
           ? 'Test mode: payments, shipping and messages are simulated.'
-          : <>Free shipping above ₹{config?.freeShippingAbove ?? 999}{config?.codEnabled ? ' · Cash on delivery available' : ''}</>}
+          : <>Free shipping over ₹{config?.freeShippingAbove ?? 999}{config?.codEnabled ? ' · Cash on delivery' : ''}</>}
       </div>
 
-      <header className="sticky top-0 z-30 border-b border-line bg-white">
+      <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-8">
           <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="Vindhyan Studio home">
             <img src="/brand/logo-mark.png" alt="" className="h-8 w-auto" />
@@ -73,7 +74,7 @@ export function Layout() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:py-8">
-        <Outlet />
+        <Suspense fallback={<Spinner label="" />}><Outlet /></Suspense>
       </main>
 
       {config?.whatsapp && (

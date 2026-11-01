@@ -7,6 +7,7 @@ import { api, openBlob } from '../lib/api'
 import { dateTime, describeCustomisation, rupees, STATUS_LABEL } from '../lib/format'
 import type { OrderStatus, OrderSummary, OrderView } from '../lib/types'
 import { useAsync } from '../lib/useAsync'
+import { useAuth } from '../state/AppState'
 import { Dashboard } from './Dashboard'
 import { Import } from './Import'
 import { Categories, ProductEditor, ProductList } from './Products'
@@ -20,30 +21,59 @@ const ACTION_LABEL: Partial<Record<OrderStatus, string>> = {
   CANCELLED: 'Cancel order',
 }
 
+const NAV: [string, string, React.ReactNode, boolean?][] = [
+  ['/admin', 'Dashboard', <path key="d" d="M4 13h6V4H4zm10 7h6v-9h-6zM4 20h6v-4H4zm10-11h6V4h-6z" />, true],
+  ['/admin/orders', 'Orders', <path key="o" d="M6 3h12l2 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7zM4 7h16M9 11h6" />],
+  ['/admin/products', 'Products & stock', <path key="p" d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5zM3 7.5l9 4.5 9-4.5M12 12v9" />],
+  ['/admin/categories', 'Categories', <path key="c" d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 3.5a3.5 3.5 0 1 0 7 0 3.5 3.5 0 0 0-7 0" />],
+  ['/admin/import', 'Update from Excel', <path key="e" d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8zM14 3v5h5M9 13l2 2 4-4" />],
+]
+
+/** Owner console: its own full-screen layout (sidebar on desktop, tabs on mobile), separate from the shop. */
 export function Admin() {
-  const tab = ({ isActive }: { isActive: boolean }) => `shrink-0 rounded-lg px-3 py-2 text-sm ${isActive ? 'bg-ink font-medium text-white' : 'text-ink/70 hover:bg-surface hover:text-ink'}`
+  const { profile, signOut } = useAuth()
+  const item = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${isActive ? 'bg-ok/10 font-medium text-ok' : 'text-ink/70 hover:bg-surface hover:text-ink'}`
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3 border-b border-line pb-4">
-        <h1 className="text-2xl">Studio admin</h1>
-        <nav className="scrollbar-none -mx-4 flex w-full gap-1 overflow-x-auto px-4 sm:mx-0 sm:ml-auto sm:w-auto sm:px-0">
-          <NavLink to="/admin" end className={tab}>Dashboard</NavLink>
-          <NavLink to="/admin/orders" className={tab}>Orders</NavLink>
-          <NavLink to="/admin/products" className={tab}>Products and stock</NavLink>
-          <NavLink to="/admin/import" className={tab}>Update from Excel</NavLink>
+    <div className="admin min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
+      <aside className="sticky top-0 z-30 border-b border-line bg-white lg:h-screen lg:border-b-0 lg:border-r">
+        <div className="flex items-center gap-2.5 px-5 py-4">
+          <img src="/brand/logo-mark.png" alt="" className="h-7 w-auto" />
+          <div className="leading-tight">
+            <p className="text-[15px] font-semibold tracking-tight">Vindhyan Studio</p>
+            <p className="text-xs text-muted">Admin</p>
+          </div>
+          <Link to="/" className="ml-auto text-xs text-muted hover:text-ink lg:hidden">Store ↗</Link>
+        </div>
+        <nav className="scrollbar-none flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0">
+          {NAV.map(([to, label, icon, end]) => (
+            <NavLink key={to} to={to} end={end} className={(a) => `${item(a)} shrink-0`}>
+              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{icon}</svg>
+              {label}
+            </NavLink>
+          ))}
         </nav>
-      </div>
-      <Routes>
-        <Route index element={<Dashboard />} />
-        <Route path="orders" element={<Orders />} />
-        <Route path="orders/:id" element={<AdminOrder />} />
-        <Route path="products" element={<ProductList />} />
-        <Route path="products/new" element={<ProductEditor />} />
-        <Route path="products/:sku" element={<ProductEditor />} />
-        <Route path="categories" element={<Categories />} />
-        <Route path="import" element={<Import />} />
-        <Route path="catalogue" element={<Navigate to="/admin/import" replace />} />
-      </Routes>
+        <div className="absolute inset-x-0 bottom-0 hidden border-t border-line p-4 text-sm lg:block">
+          <Link to="/" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-ink/70 hover:bg-surface hover:text-ink">View store <span>↗</span></Link>
+          <p className="mt-3 truncate px-2 text-xs text-muted">{profile?.email ?? profile?.phone}</p>
+          <button onClick={signOut} className="px-2 text-xs text-muted underline hover:text-ink">Sign out</button>
+        </div>
+      </aside>
+      <main className="min-w-0 px-4 py-6 sm:px-8 lg:py-8">
+        <div className="mx-auto max-w-[1240px]">
+          <Routes>
+            <Route index element={<Dashboard />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="orders/:id" element={<AdminOrder />} />
+            <Route path="products" element={<ProductList />} />
+            <Route path="products/new" element={<ProductEditor />} />
+            <Route path="products/:sku" element={<ProductEditor />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="import" element={<Import />} />
+            <Route path="catalogue" element={<Navigate to="/admin/import" replace />} />
+          </Routes>
+        </div>
+      </main>
     </div>
   )
 }
@@ -59,6 +89,7 @@ function Orders() {
 
   return (
     <div className="space-y-5">
+      <h2 className="text-2xl">Orders</h2>
       {s && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="To print" value={s.byStatus.CONFIRMED + s.byStatus.PRINTING} highlight />
@@ -85,8 +116,8 @@ function Orders() {
             <tbody className="divide-y divide-line">
               {orders.data.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted">No orders here.</td></tr>}
               {orders.data.map((o) => (
-                <tr key={o.id} className="hover:bg-stone-50">
-                  <td className="p-3"><Link to={`/admin/orders/${o.id}`} className="font-semibold text-brand">{o.orderNo}</Link><br /><span className="text-xs text-muted">{dateTime(o.createdAt)}</span></td>
+                <tr key={o.id} className="hover:bg-surface/60">
+                  <td className="p-3"><Link to={`/admin/orders/${o.id}`} className="font-medium text-ink hover:underline">{o.orderNo}</Link><br /><span className="text-xs text-muted">{dateTime(o.createdAt)}</span></td>
                   <td className="p-3">{o.customerName ?? '—'}<br /><span className="text-xs text-muted">{o.city}</span></td>
                   <td className="p-3">{o.firstItem}{o.itemCount > 1 ? ` +${o.itemCount - 1}` : ''}{o.customised && <span className="ml-1 rounded bg-brand-soft px-1.5 text-xs text-brand">custom</span>}</td>
                   <td className="p-3">{rupees(o.total)}<br /><span className="text-xs text-muted">{o.paymentMode}</span></td>
@@ -103,9 +134,9 @@ function Orders() {
 
 function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
   return (
-    <div className={`card p-4 ${highlight ? 'border-ink/20 bg-surface' : ''}`}>
-      <p className="text-sm text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
+    <div className="card p-4">
+      <p className="flex items-center gap-1.5 text-sm text-muted">{highlight && Number(value) > 0 && <span className="h-1.5 w-1.5 rounded-full bg-ok" />}{label}</p>
+      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
     </div>
   )
 }

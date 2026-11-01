@@ -90,10 +90,10 @@ function Body({ d, loading }: { d: Data; loading: boolean }) {
     <div className={`space-y-6 transition ${loading ? 'opacity-60' : ''}`}>
       {/* Needs attention */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Todo to="/admin/orders?status=CONFIRMED" n={a.toPrint} label="Orders to print" />
-        <Todo to="/admin/orders?status=READY" n={a.readyToShip} label="Packed, waiting for courier" />
-        <Todo to="/admin/orders?status=PAYMENT_PENDING" n={a.awaitingPayment} label="Waiting for payment" quiet />
-        <Todo to="/admin/products?filter=low" n={lowCount} label="Low or out of stock" />
+        <Todo to="/admin/orders?status=CONFIRMED" n={a.toPrint} label="To print" />
+        <Todo to="/admin/orders?status=READY" n={a.readyToShip} label="Ready to ship" />
+        <Todo to="/admin/orders?status=PAYMENT_PENDING" n={a.awaitingPayment} label="Awaiting payment" quiet />
+        <Todo to="/admin/products?filter=low" n={lowCount} label="Low stock" />
       </div>
 
       {/* KPIs */}
@@ -108,8 +108,8 @@ function Body({ d, loading }: { d: Data; loading: boolean }) {
       {/* Sales chart */}
       <section className="card p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-base">Sales by {d.granularity}</h3>
-          <p className="text-xs text-muted">Confirmed orders, including shipping</p>
+          <h3 className="text-base">Sales</h3>
+          <p className="text-xs text-muted">By {d.granularity} · confirmed orders incl. shipping</p>
         </div>
         <Bars points={d.series} />
       </section>
@@ -119,7 +119,7 @@ function Body({ d, loading }: { d: Data; loading: boolean }) {
           <h3 className="px-5 pt-5 text-base">Best-selling products</h3>
           {d.topProducts.length === 0 ? <p className="p-5 text-sm text-muted">No sales in this period yet.</p> : (
             <table className="mt-3 w-full text-sm">
-              <thead className="border-y border-line bg-surface text-left text-xs text-muted">
+              <thead className="border-y border-line bg-surface/70 text-left text-xs text-muted">
                 <tr><th className="px-5 py-2 font-medium">Product</th><th className="px-3 py-2 text-right font-medium">Qty</th><th className="px-5 py-2 text-right font-medium">Sales</th></tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -185,9 +185,10 @@ function Body({ d, loading }: { d: Data; loading: boolean }) {
 function Todo({ to, n, label, quiet }: { to: string; n: number; label: string; quiet?: boolean }) {
   const hot = n > 0 && !quiet
   return (
-    <Link to={to} className={`rounded-xl border p-4 transition hover:border-ink/40 ${hot ? 'border-ink/20 bg-surface' : 'border-line'}`}>
-      <p className={`text-2xl font-semibold tracking-tight ${n === 0 ? 'text-muted' : ''}`}>{n}</p>
-      <p className="mt-0.5 text-sm text-muted">{label} ›</p>
+    <Link to={to} className="card group flex items-center gap-3 p-4 transition hover:ring-1 hover:ring-ink/10">
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-semibold tabular-nums ${hot ? 'bg-ok/10 text-ok' : 'bg-surface text-muted'}`}>{n}</span>
+      <span className="min-w-0 flex-1 text-sm leading-snug text-ink/80">{label}</span>
+      <span className="text-muted transition group-hover:translate-x-0.5">›</span>
     </Link>
   )
 }
@@ -196,36 +197,61 @@ function Kpi({ label, value, now, before, note }: { label: string; value: string
   const change = before > 0 ? ((now - before) / before) * 100 : null
   return (
     <div className="card p-4">
-      <p className="text-sm text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
-      <p className="mt-1 text-xs text-muted">
-        {change === null ? (now > 0 ? 'No sales in previous period' : '—') : (
-          <><span className={change >= 0 ? 'text-ok' : 'text-bad'}>{change >= 0 ? '▲' : '▼'} {Math.abs(change).toFixed(0)}%</span> vs previous period</>
-        )}
-      </p>
-      {note && <p className="text-xs text-muted">{note}</p>}
+      <p className="text-[13px] text-muted">{label}</p>
+      <p className="mt-1.5 text-[26px] font-semibold leading-none tracking-tight tabular-nums">{value}</p>
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
+        {change === null
+          ? <span className="text-muted">{now > 0 ? 'New this period' : 'No data yet'}</span>
+          : <>
+              <span className={`rounded-md px-1.5 py-0.5 font-medium tabular-nums ${change >= 0 ? 'bg-ok/10 text-ok' : 'bg-bad/10 text-bad'}`}>
+                {change >= 0 ? '+' : '−'}{Math.abs(change).toFixed(1)}%
+              </span>
+              <span className="text-muted">vs previous</span>
+            </>}
+      </div>
+      {note && <p className="mt-1 text-xs text-muted">{note}</p>}
     </div>
   )
 }
 
+/** Smooth area chart of sales; hover (or tap) a point to see the day's numbers. */
 function Bars({ points }: { points: Data['series'] }) {
-  const max = Math.max(1, ...points.map((p) => p.revenue))
-  const every = Math.ceil(points.length / 12)
-  if (points.every((p) => p.revenue === 0)) return <p className="py-10 text-center text-sm text-muted">No sales in this period yet.</p>
+  const [hover, setHover] = useState<number | null>(null)
+  if (points.every((p) => p.revenue === 0)) return <p className="py-14 text-center text-sm text-muted">No sales in this period yet.</p>
+  const W = 1000, H = 220, pad = 8
+  const max = Math.max(...points.map((p) => p.revenue)) * 1.1
+  const x = (i: number) => (points.length === 1 ? W / 2 : (i / (points.length - 1)) * W)
+  const y = (v: number) => H - pad - (v / max) * (H - pad * 2)
+  const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.revenue).toFixed(1)}`).join(' ')
+  const area = `${line} L${x(points.length - 1)},${H} L${x(0)},${H} Z`
+  const every = Math.ceil(points.length / 8)
+  const h = hover === null ? null : points[hover]
+  const total = points.reduce((a, p) => a + p.revenue, 0)
   return (
-    <div className="mt-5">
-      <div className="flex h-48 items-end gap-[3px]">
-        {points.map((p) => (
-          <div key={p.date} className="group relative flex h-full flex-1 items-end">
-            <div className="w-full rounded-t-[3px] bg-ink/80 transition group-hover:bg-ink" style={{ height: `${Math.max(p.revenue > 0 ? 2 : 0, (p.revenue / max) * 100)}%` }} />
-            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs text-white group-hover:block">
-              {p.label}: {rupees(p.revenue)} · {p.orders} order{p.orders === 1 ? '' : 's'}
-            </div>
-          </div>
-        ))}
+    <div className="mt-4">
+      <div className="mb-3 flex items-baseline gap-3">
+        <p className="text-2xl font-semibold tracking-tight tabular-nums">{rupees(h ? h.revenue : total)}</p>
+        <p className="text-sm text-muted">{h ? `${h.label} · ${h.orders} order${h.orders === 1 ? '' : 's'}` : 'Total in this period'}</p>
       </div>
-      <div className="mt-2 flex gap-[3px] border-t border-line pt-1.5 text-[10px] text-muted">
-        {points.map((p, i) => <span key={p.date} className="flex-1 truncate text-center">{i % every === 0 ? p.label : ''}</span>)}
+      <div className="relative" onMouseLeave={() => setHover(null)}
+           onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setHover(Math.max(0, Math.min(points.length - 1, Math.round(((e.clientX - r.left) / r.width) * (points.length - 1))))) }}>
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-52 w-full overflow-visible">
+          <defs>
+            <linearGradient id="sales-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-ok)" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="var(--color-ok)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[0.25, 0.5, 0.75].map((f) => <line key={f} x1="0" x2={W} y1={H * f} y2={H * f} stroke="var(--color-line)" strokeDasharray="4 6" vectorEffect="non-scaling-stroke" />)}
+          <path d={area} fill="url(#sales-fill)" />
+          <path d={line} fill="none" stroke="var(--color-ok)" strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          {h && <line x1={x(hover!)} x2={x(hover!)} y1="0" y2={H} stroke="var(--color-ink)" strokeOpacity="0.25" vectorEffect="non-scaling-stroke" />}
+        </svg>
+        {h && <span className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-ok shadow"
+                    style={{ left: `${(x(hover!) / W) * 100}%`, top: `${(y(h.revenue) / H) * 100}%` }} />}
+      </div>
+      <div className="mt-2 flex justify-between text-[11px] text-muted">
+        {points.map((p, i) => (i % every === 0 || i === points.length - 1) && <span key={p.date}>{p.label}</span>)}
       </div>
     </div>
   )
@@ -237,12 +263,12 @@ function Split({ a, b }: { a: [string, number, number]; b: [string, number, numb
   return (
     <div className="mt-4">
       <div className="flex h-2.5 overflow-hidden rounded-full bg-surface">
-        {total > 0 && <><div className="bg-ink" style={{ width: `${pa}%` }} /><div className="bg-accent" style={{ width: `${100 - pa}%` }} /></>}
+        {total > 0 && <><div className="bg-ink/80" style={{ width: `${pa}%` }} /><div className="bg-ok" style={{ width: `${100 - pa}%` }} /></>}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
         {[a, b].map(([label, n, v], i) => (
           <div key={label}>
-            <p className="flex items-center gap-1.5 text-muted"><span className={`h-2 w-2 rounded-full ${i === 0 ? 'bg-ink' : 'bg-accent'}`} />{label}</p>
+            <p className="flex items-center gap-1.5 text-muted"><span className={`h-2 w-2 rounded-full ${i === 0 ? 'bg-ink/80' : 'bg-ok'}`} />{label}</p>
             <p className="font-medium tabular-nums">{rupees(v)} <span className="font-normal text-muted">· {n} orders</span></p>
           </div>
         ))}
@@ -260,7 +286,7 @@ function Share({ rows }: { rows: [string, number, string][] }) {
         <li key={name} className="text-sm">
           <div className="flex justify-between gap-3"><span className="truncate">{name}</span><span className="shrink-0 tabular-nums">{rupees(value)}</span></div>
           <div className="mt-1 flex items-center gap-2">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface"><div className="h-full rounded-full bg-ink/70" style={{ width: `${(value / max) * 100}%` }} /></div>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface"><div className="h-full rounded-full bg-ok/70" style={{ width: `${(value / max) * 100}%` }} /></div>
             <span className="w-16 shrink-0 text-right text-xs text-muted">{note}</span>
           </div>
         </li>

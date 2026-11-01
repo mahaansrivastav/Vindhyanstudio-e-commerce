@@ -55,7 +55,6 @@ export function KeyringPreview({ text, colour, style, className = '' }: { text: 
                 fontSize={size} letterSpacing={s.spacing} fill={fill} stroke="#00000026" strokeWidth="2">{name}</text>
         </g>
       </svg>
-      <span className="absolute bottom-3 left-4 text-[11px] text-muted">Preview · actual colours may vary slightly</span>
     </div>
   )
 }

@@ -31,13 +31,13 @@ export function Home() {
       <section className="grid items-center gap-8 pt-2 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-6">
         <div>
           <h1 className="text-[2.6rem] leading-[1.04] sm:text-6xl">Your name.<br />Printed in 3D.</h1>
-          <p className="mt-5 max-w-md text-lg leading-relaxed text-muted">Personalised keychains, idols, lamps and gifts. Printed to order in Gorakhpur and delivered across India.</p>
+          <p className="mt-5 max-w-md text-lg leading-relaxed text-muted">Personalised keychains, idols and décor, made to order.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to={keyring ? `/p/${keyring.slug}` : '/shop?category=keychain'} className="btn-primary w-full px-6 py-3 text-[15px] sm:w-auto">Design your keychain</Link>
             <Link to="/shop" className="btn-outline w-full px-6 py-3 text-[15px] sm:w-auto">Shop all products</Link>
           </div>
         </div>
-        <KeyringPreview text={DEMO_NAMES[i]} colour={DEMO_COLOURS[i]} style={DEMO_STYLES[i]} className="aspect-[4/3] rounded-2xl bg-surface" />
+        <KeyringPreview text={DEMO_NAMES[i]} colour={DEMO_COLOURS[i]} style={DEMO_STYLES[i]} className="aspect-[4/3] rounded-2xl ring-1 ring-line" />
       </section>
 
       {/* Categories */}
@@ -47,7 +47,7 @@ export function Home() {
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {topCats.map((c) => (
             <Link key={c.slug} to={`/shop?category=${c.slug}`}
-                  className="group flex items-center gap-3 rounded-xl border border-line p-2 pr-4 transition hover:border-ink/30">
+                  className="group flex items-center gap-3 rounded-xl bg-card p-2 pr-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-line transition hover:ring-ink/20">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface">
                 <ProductImage src={c.coverImage} alt="" className="h-full w-full transition duration-300 group-hover:scale-105" />
               </div>
@@ -70,23 +70,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-t border-line pt-12">
-        <h2 className="text-2xl sm:text-3xl">How it works</h2>
-        <div className="mt-8 grid gap-8 sm:grid-cols-3">
-          {[
-            ['01', 'Personalise', 'Pick a product, choose the style and colour, and add a name or photo.'],
-            ['02', 'We print it', 'Every piece is 3D printed fresh for you and checked by hand.'],
-            ['03', 'Delivered to you', 'Packed with care and shipped with tracking across India.'],
-          ].map(([n, t, d]) => (
-            <div key={n}>
-              <p className="text-sm font-medium text-muted">{n}</p>
-              <p className="mt-2 text-lg font-semibold tracking-tight">{t}</p>
-              <p className="mt-1.5 max-w-xs text-[15px] leading-relaxed text-muted">{d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }
