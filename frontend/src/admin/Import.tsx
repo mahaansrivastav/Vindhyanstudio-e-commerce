@@ -76,7 +76,7 @@ export function Import() {
       {err && <ErrorBox message={err} />}
 
       {!preview && (
-        <ol className="grid gap-4 md:grid-cols-2">
+        <ol className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <li className="card p-5">
             <p className="text-sm text-muted">Step 1</p>
             <h3 className="mt-1 text-lg">Download your product list</h3>

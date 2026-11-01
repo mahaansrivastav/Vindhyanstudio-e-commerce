@@ -229,7 +229,7 @@ export function ProductEditor() {
   }
 
   return (
-    <form onSubmit={save} className="grid gap-6 lg:grid-cols-[1fr_360px]">
+    <form onSubmit={save} className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/admin/products" className="text-sm text-muted">← Products</Link>

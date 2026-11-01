@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { IconShield, IconTruck } from '../components/Icons'
 import { colourHex, KeyringPreview } from '../components/KeyringPreview'
+import { MobileBar } from '../components/MobileBar'
 import { PincodeCheck } from '../components/PincodeCheck'
 import { Heart } from '../components/ProductCard'
 import { ErrorBox, Price, ProductImage, Spinner, StockBadge } from '../components/ui'
@@ -101,7 +102,7 @@ export function Product() {
         <span className="text-ink/80">{p.name}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
         {/* Gallery */}
         <div className="space-y-3 lg:sticky lg:top-36 lg:self-start">
           <div className="overflow-hidden rounded-xl bg-surface">
@@ -215,20 +216,26 @@ export function Product() {
               <div className="flex items-center gap-3">
                 <span className="text-sm text-muted">Quantity</span>
                 <div className="flex items-center rounded-lg border border-line">
-                  <button className="px-3 py-2 text-lg" onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease">−</button>
+                  <button className="h-10 w-10 text-lg" onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease">−</button>
                   <span className="w-8 text-center text-sm font-semibold">{qty}</span>
-                  <button className="px-3 py-2 text-lg" onClick={() => setQty(Math.min(Math.min(20, p.stock), qty + 1))} aria-label="Increase">+</button>
+                  <button className="h-10 w-10 text-lg" onClick={() => setQty(Math.min(Math.min(20, p.stock), qty + 1))} aria-label="Increase">+</button>
                 </div>
                 <span className="ml-auto text-lg font-semibold tracking-tight">₹{(p.sellingPrice * qty).toLocaleString('en-IN')}</span>
               </div>
               {formErr && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-bad" role="alert">{formErr}</p>}
-              <div className="flex gap-2">
+              <div className="hidden gap-2 sm:flex">
                 <button className="btn-primary flex-1 py-3 text-[15px]" onClick={() => addToCart(true)} disabled={uploading}>Buy now</button>
                 <button className="btn-outline flex-1 py-3 text-[15px]" onClick={() => addToCart(false)} disabled={uploading}>Add to cart</button>
                 <button className="btn-outline px-3.5" onClick={() => wish.toggle({ sku: p.sku, slug: p.slug, name: p.name, image: p.images[0] ?? null, price: p.sellingPrice })}
                         aria-label={saved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={saved}><Heart filled={saved} /></button>
               </div>
               {added && <p className="text-sm text-ok">✓ Added to cart. <Link to="/cart" className="font-semibold underline">View cart</Link></p>}
+              <MobileBar>
+                <button className="btn-outline h-12 w-12 shrink-0 p-0" onClick={() => wish.toggle({ sku: p.sku, slug: p.slug, name: p.name, image: p.images[0] ?? null, price: p.sellingPrice })}
+                        aria-label={saved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={saved}><Heart filled={saved} /></button>
+                <button className="btn-outline h-12 flex-1 text-[15px]" onClick={() => addToCart(false)} disabled={uploading}>{added ? 'Added ✓' : 'Add to cart'}</button>
+                <button className="btn-primary h-12 flex-1 text-[15px]" onClick={() => addToCart(true)} disabled={uploading}>Buy now</button>
+              </MobileBar>
             </div>
           ) : (
             <button className="btn-outline w-full py-3.5" disabled>Out of stock</button>

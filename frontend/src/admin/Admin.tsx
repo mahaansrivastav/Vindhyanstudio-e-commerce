@@ -35,7 +35,7 @@ export function Admin() {
   const item = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${isActive ? 'bg-ok/10 font-medium text-ok' : 'text-ink/70 hover:bg-surface hover:text-ink'}`
   return (
-    <div className="admin min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
+    <div className="admin min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="sticky top-0 z-30 border-b border-line bg-white lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center gap-2.5 px-5 py-4">
           <img src="/brand/logo-mark.png" alt="" className="h-7 w-auto" />
@@ -108,7 +108,27 @@ function Orders() {
       {orders.loading && <Spinner />}
       {orders.error && <ErrorBox message={orders.error} onRetry={orders.reload} />}
       {orders.data && (
-        <div className="card overflow-x-auto">
+        <ul className="card divide-y divide-line sm:hidden">
+          {orders.data.length === 0 && <li className="p-6 text-center text-sm text-muted">No orders here.</li>}
+          {orders.data.map((o) => (
+            <li key={o.id}>
+              <Link to={`/admin/orders/${o.id}`} className="flex items-start gap-3 p-4 active:bg-surface">
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-2 font-medium">{o.orderNo}{o.customised && <span className="rounded bg-brand-soft px-1.5 text-[11px] font-normal text-brand">custom</span>}</p>
+                  <p className="mt-0.5 truncate text-sm">{o.firstItem}{o.itemCount > 1 ? ` +${o.itemCount - 1}` : ''}</p>
+                  <p className="mt-0.5 text-xs text-muted">{o.customerName ?? '—'} · {o.city} · {dateTime(o.createdAt)}</p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span className="font-medium tabular-nums">{rupees(o.total)}</span>
+                  <StatusBadge status={o.status} />
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {orders.data && (
+        <div className="card hidden overflow-x-auto sm:block">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-line bg-surface text-xs text-muted">
               <tr><th className="p-3">Order</th><th className="p-3">Customer</th><th className="p-3">Items</th><th className="p-3">Total</th><th className="p-3">Status</th></tr>
@@ -162,7 +182,7 @@ function AdminOrder() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/admin/orders" className="text-sm text-muted">← Orders</Link>
@@ -191,7 +211,7 @@ function AdminOrder() {
           <h3 className="label">History</h3>
           <ol className="space-y-2 text-sm">
             {o.events.map((e, i) => (
-              <li key={i}><b>{STATUS_LABEL[e.status]}</b> <span className="text-muted">· {dateTime(e.at)} · {e.actor}</span>{e.note && <p className="text-muted">{e.note}</p>}</li>
+              <li key={i}><b>{STATUS_LABEL[e.status]}</b> <span className="text-muted">· {dateTime(e.at)} · {e.actor}</span>{e.note && <p className="text-muted [overflow-wrap:anywhere]">{e.note}</p>}</li>
             ))}
           </ol>
         </section>

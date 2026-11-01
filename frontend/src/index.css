@@ -7,17 +7,18 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* Soft, low-glare neutrals: a light warm-grey page, white cards, near-black text. */
-  --color-ink: #1d1d1f;
-  --color-muted: #6e6e73;
-  --color-line: #e6e5e2;
-  --color-paper: #f7f7f5;
+  /* Brand: deep oxblood maroon on warm ivory, with a marigold accent for offers.
+     Warm and festive for Indian gifting, still calm and premium. */
+  --color-ink: #211a1b;
+  --color-muted: #6f6467;
+  --color-line: #ece4e1;
+  --color-paper: #fcf9f6;
   --color-card: #ffffff;
-  --color-surface: #efeeeb;
-  --color-brand: #1d1d1f;
-  --color-brand-dark: #000000;
-  --color-brand-soft: #efeeeb;
-  --color-accent: #a86f24;
+  --color-surface: #f5efeb;
+  --color-brand: #7a1f2b;
+  --color-brand-dark: #5c1520;
+  --color-brand-soft: #f7ebec;
+  --color-accent: #c47414;
   --color-ok: #15803d;
   --color-warn: #b45309;
   --color-bad: #c42b2b;
@@ -25,7 +26,7 @@
 
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
-  body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: "cv11", "ss01"; }
+  body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: "cv11", "ss01"; overflow-wrap: break-word; }
   h1, h2, h3 { @apply font-display font-semibold; letter-spacing: -0.025em; }
   h1 { letter-spacing: -0.035em; }
 }
@@ -42,8 +43,9 @@
 @utility btn-ghost {
   @apply btn hover:bg-surface;
 }
+/* 16px text on phones stops iOS from zooming into fields. */
 @utility input {
-  @apply w-full rounded-lg border border-line bg-card px-3 py-2.5 text-sm outline-none transition focus:border-ink/50 focus:ring-2 focus:ring-ink/5;
+  @apply w-full rounded-lg border border-line bg-card px-3 py-2.5 text-[16px] sm:text-sm outline-none transition focus:border-ink/50 focus:ring-2 focus:ring-ink/5;
 }
 @utility label {
   @apply mb-1.5 block text-sm font-medium text-ink;
@@ -55,7 +57,7 @@
   @apply rounded-lg border border-line px-3 py-1.5 text-sm transition hover:border-ink/40;
 }
 @utility chip-on {
-  @apply border-ink bg-ink text-white;
+  @apply border-brand bg-brand text-white;
 }
 @utility scrollbar-none {
   scrollbar-width: none;
@@ -64,6 +66,10 @@
 
 /* ---------- Admin: cooler, data-dense dashboard look ---------- */
 .admin {
+  /* The admin keeps a neutral, data-first look; the maroon is for the shop. */
+  --color-brand: #1f2937;
+  --color-brand-dark: #111827;
+  --color-ink: #1d1d1f;
   --color-paper: #f4f5f7;
   --color-surface: #f4f5f7;
   --color-brand-soft: #f4f5f7;

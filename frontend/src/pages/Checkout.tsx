@@ -2,6 +2,7 @@
 // Licensed, not sold. Copying, modifying or sharing is not permitted without written permission. See LICENSE.
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { MobileBar } from '../components/MobileBar'
 import { AddressForm } from '../components/AddressForm'
 import { Empty, ErrorBox, ProductImage, Spinner } from '../components/ui'
 import { api } from '../lib/api'
@@ -56,7 +57,7 @@ export function Checkout() {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="space-y-6">
         <Steps current={2} />
         <h1 className="text-3xl font-semibold">Checkout</h1>
@@ -134,9 +135,18 @@ export function Checkout() {
           <Link to="/policies/privacy" className="underline">Privacy policy</Link> and{' '}
           <Link to="/policies/refund" className="underline">Returns &amp; refunds policy</Link>.
         </p>
-        <button className="btn-primary w-full py-3" disabled={busy || !quote?.valid || !addressId || showForm} onClick={place}>
+        <button className="btn-primary hidden w-full py-3 sm:flex" disabled={busy || !quote?.valid || !addressId || showForm} onClick={place}>
           {busy ? 'Placing order…' : mode === 'COD' ? 'Place order' : 'Continue to payment'}
         </button>
+        <MobileBar>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted">Total</p>
+            <p className="text-lg font-semibold leading-tight tabular-nums">{quote ? rupees(quote.total) : '…'}</p>
+          </div>
+          <button className="btn-primary h-12 flex-1 text-[15px]" disabled={busy || !quote?.valid || !addressId || showForm} onClick={place}>
+            {busy ? 'Placing…' : mode === 'COD' ? 'Place order' : 'Continue'}
+          </button>
+        </MobileBar>
       </aside>
     </div>
   )

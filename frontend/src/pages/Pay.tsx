@@ -61,7 +61,7 @@ export function Pay() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <Steps />
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section className="space-y-4">
           <div className="card flex flex-wrap items-end justify-between gap-3 p-5">
             <div>

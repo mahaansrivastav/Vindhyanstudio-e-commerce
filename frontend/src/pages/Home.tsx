@@ -28,7 +28,7 @@ export function Home() {
   return (
     <div className="space-y-16 sm:space-y-20">
       {/* Hero */}
-      <section className="grid items-center gap-8 pt-2 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-6">
+      <section className="grid items-center gap-8 pt-2 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-14 lg:pt-6">
         <div>
           <h1 className="text-[2.6rem] leading-[1.04] sm:text-6xl">Your name.<br />Printed in 3D.</h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-muted">Personalised keychains, idols and décor, made to order.</p>

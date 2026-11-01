@@ -114,7 +114,7 @@ function Body({ d, loading }: { d: Data; loading: boolean }) {
         <Bars points={d.series} />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <section className="card overflow-hidden">
           <h3 className="px-5 pt-5 text-base">Best-selling products</h3>
           {d.topProducts.length === 0 ? <p className="p-5 text-sm text-muted">No sales in this period yet.</p> : (

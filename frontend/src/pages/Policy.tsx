@@ -103,7 +103,7 @@ export function Policy() {
         <p className="text-sm text-muted">Policies</p>
         <h1 className="mt-1 text-3xl sm:text-4xl">{p.title}</h1>
       </div>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_1fr] lg:gap-14">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-14">
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-36 lg:self-start">
           <nav className="flex gap-1 overflow-x-auto scrollbar-none lg:flex-col" aria-label="Policies">
             {NAV.map(([s, label]) => (

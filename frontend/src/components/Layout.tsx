@@ -28,6 +28,7 @@ export function Layout() {
     nav(q.trim() ? `/shop?q=${encodeURIComponent(q.trim())}` : '/shop')
   }
   const activeCat = loc.pathname === '/shop' ? params.get('category') : null
+  const hideFab = /^\/(p|cart|checkout|pay)(\/|$)/.test(loc.pathname)
   // Biggest categories go in the menu bar; the long tail sits under "More".
   const ranked = [...cats].sort((a, b) => b.productCount - a.productCount)
   const main = ranked.slice(0, 7)
@@ -35,35 +36,36 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="bg-ink px-4 py-1.5 text-center text-[12px] text-white/80">
+      <div className="bg-brand px-4 py-1.5 text-center text-[12px] text-white/90">
         {config?.paymentProvider === 'mock'
           ? 'Test mode: payments, shipping and messages are simulated.'
           : <>Free shipping on orders over ₹{config?.freeShippingAbove ?? 999}</>}
       </div>
 
       <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:gap-8 sm:py-3">
           <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="Vindhyan Studio home">
-            <img src="/brand/logo-mark.png" alt="" className="h-8 w-auto" />
-            <span className="hidden leading-none sm:block">
-              <span className="block text-[17px] font-semibold tracking-[0.14em]">VINDHYAN</span>
-              <span className="mt-0.5 block text-[9px] font-medium tracking-[0.5em] text-muted">STUDIO</span>
+            <img src="/brand/logo-mark.png" alt="" className="h-7 w-auto sm:h-8" />
+            <span className="leading-none">
+              <span className="block text-[15px] font-semibold tracking-[0.14em] sm:text-[17px]">VINDHYAN</span>
+              <span className="mt-0.5 block text-[8px] font-medium tracking-[0.5em] text-muted sm:text-[9px]">STUDIO</span>
             </span>
           </Link>
-          <form onSubmit={search} className="relative mx-auto w-full max-w-xl" role="search">
-            <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input className="input bg-white py-2 pl-10" placeholder="Search keychains, idols, lamps" value={q}
-                   onChange={(e) => setQ(e.target.value)} aria-label="Search products" />
-          </form>
-          <nav className="flex shrink-0 items-center gap-0.5 text-sm font-semibold sm:gap-1">
+          {/* Desktop: search in the bar. Phones get a full-width search row below. */}
+          <SearchBox q={q} setQ={setQ} onSubmit={search} className="mx-auto hidden max-w-xl md:block" />
+          <nav className="ml-auto flex shrink-0 items-center gap-0.5 text-sm font-semibold sm:gap-1 md:ml-0">
             <HeaderLink to={profile ? '/account/orders' : '/login?next=/account/orders'} label="Track order" icon={<IconTruck />} className="hidden lg:flex" />
             <HeaderLink to={profile ? '/account/wishlist' : '/wishlist'} label="Wishlist" icon={<IconHeart />} count={wish.items.length} />
             <HeaderLink to="/cart" label="Cart" icon={<IconCart />} count={cart.count} />
             {profile ? <ProfileMenu /> : <HeaderLink to="/login" label="Sign in" icon={<IconUser />} />}
           </nav>
         </div>
+        <div className="px-4 pb-2.5 md:hidden">
+          <SearchBox q={q} setQ={setQ} onSubmit={search} />
+        </div>
         {cats.length > 0 && (
-          <div className="border-t border-line">
+          // Phones show the category row only on the home page (the shop page has its own filter chips).
+          <div className={`border-t border-line ${loc.pathname === '/' ? '' : 'hidden md:block'}`}>
             <nav className="scrollbar-none mx-auto flex max-w-7xl items-center gap-6 overflow-x-auto px-4 text-sm lg:overflow-visible" aria-label="Categories">
               <NavItem to="/shop" active={loc.pathname === '/shop' && !activeCat}>All products</NavItem>
               {main.map((c) => <NavItem key={c.slug} to={`/shop?category=${c.slug}`} active={activeCat === c.slug}>{c.name}</NavItem>)}
@@ -78,9 +80,10 @@ export function Layout() {
       </main>
 
       {config?.whatsapp && (
-        <a href={`https://wa.me/${config.whatsapp}?text=${encodeURIComponent('Hi Vindhyan Studio, I have a question about an order.')}`}
+        // Hidden on phones where a sticky buy/checkout bar sits at the bottom.
+        <a data-fab={hideFab ? 'hide' : undefined} href={`https://wa.me/${config.whatsapp}?text=${encodeURIComponent('Hi Vindhyan Studio, I have a question about an order.')}`}
            target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp"
-           className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full bg-[#25D366] p-3 text-sm font-medium text-white shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition hover:bg-[#1fbd5a] sm:px-4 sm:py-2.5">
+           className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full bg-[#25D366] p-3 data-[fab=hide]:hidden sm:data-[fab=hide]:flex text-sm font-medium text-white shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition hover:bg-[#1fbd5a] sm:px-4 sm:py-2.5">
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2z" /></svg>
           <span className="hidden sm:inline">Chat with us</span>
         </a>
@@ -97,13 +100,13 @@ export function Layout() {
               [<IconShield key="d" className="h-5 w-5" />, 'Secure payments'],
             ].map(([icon, text]) => (
               <li key={text as string} className="flex items-center gap-2.5 text-ink/80">
-                <span className="text-ink/60">{icon}</span>{text}
+                <span className="text-brand">{icon}</span>{text}
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="bg-[#111111] text-stone-300">
+        <div className="bg-[#1f1416] text-stone-300">
           <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
             <div>
               <img src="/brand/logo-light.png" alt="Vindhyan Studio, your idea, our creation" className="h-20 w-auto" />
@@ -164,7 +167,7 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
 
 function NavItem({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) {
   return (
-    <Link to={to} className={`shrink-0 py-3 ${active ? 'font-medium text-ink shadow-[inset_0_-2px_0_#0a0a0a]' : 'text-ink/65 hover:text-ink'}`}>{children}</Link>
+    <Link to={to} className={`shrink-0 py-3 ${active ? 'font-medium text-brand shadow-[inset_0_-2px_0_var(--color-brand)]' : 'text-ink/65 hover:text-brand'}`}>{children}</Link>
   )
 }
 
@@ -248,5 +251,15 @@ function ProfileMenu() {
         </div>
       )}
     </div>
+  )
+}
+
+function SearchBox({ q, setQ, onSubmit, className = '' }: { q: string; setQ: (v: string) => void; onSubmit: (e: React.FormEvent) => void; className?: string }) {
+  return (
+    <form onSubmit={onSubmit} className={`relative w-full ${className}`} role="search">
+      <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+      <input type="search" enterKeyHint="search" className="input bg-white py-2.5 pl-10 text-[16px] sm:py-2 sm:text-sm" placeholder="Search keychains, idols, lamps" value={q}
+             onChange={(e) => setQ(e.target.value)} aria-label="Search products" />
+    </form>
   )
 }

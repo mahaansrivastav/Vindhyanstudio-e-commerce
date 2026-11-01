@@ -96,7 +96,7 @@ export function OrderDetail() {
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <section className="card p-4 text-sm">
           <h2 className="label">Delivering to</h2>
           <p className="font-semibold">{o.address.name} · {o.address.phone}</p>

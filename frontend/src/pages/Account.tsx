@@ -26,8 +26,8 @@ export function Account() {
   const item = ({ isActive }: { isActive: boolean }) =>
     `flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${isActive ? 'bg-surface font-medium text-ink' : 'text-ink/65 hover:bg-surface hover:text-ink'}`
   return (
-    <div className="grid gap-6 pt-2 lg:grid-cols-[250px_1fr] lg:gap-10">
-      <aside className="space-y-4 lg:sticky lg:top-36 lg:self-start">
+    <div className="grid grid-cols-1 gap-6 pt-2 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-10">
+      <aside className="min-w-0 space-y-4 lg:sticky lg:top-36 lg:self-start">
         <div className="flex items-center gap-3 rounded-xl bg-card p-4 ring-1 ring-line">
           <Avatar name={profile?.name} />
           <div className="min-w-0">
@@ -170,7 +170,7 @@ function AddressesTab() {
 
   return (
     <Section title="Addresses" action={editing !== 'new' && <button className="btn-outline" onClick={() => setEditing('new')}>+ Add address</button>}>
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {[...(data ?? [])].sort((x, y) => Number(y.isDefault) - Number(x.isDefault)).map((a) => (
         editing !== 'new' && editing?.id === a.id ? (
           <div key={a.id} className="card p-5 md:col-span-2">

@@ -187,7 +187,8 @@ public class OrderService {
                     i.getQty(), i.lineTotal(), i.customisation());
         }).toList();
         List<OrderView.Event> evs = o.getEvents().stream()
-                .map(e -> new OrderView.Event(e.getStatus(), e.getNote(), admin ? e.getActor() : null, e.getCreatedAt())).toList();
+                // Notes are internal (payment/refund/courier details, errors); customers see only the status and time.
+                .map(e -> new OrderView.Event(e.getStatus(), admin ? e.getNote() : null, admin ? e.getActor() : null, e.getCreatedAt())).toList();
         OrderView.ShipmentInfo ship = shipping.forOrder(o.getId())
                 .map(s -> new OrderView.ShipmentInfo(s.getStatus(), s.getCourier(), s.getAwb(), s.getTrackingUrl(),
                         admin ? s.getLabelUrl() : null, admin ? s.getLastError() : null))
